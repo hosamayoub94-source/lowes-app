@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#FBF3E2">
+<title>Lowe's Professional</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f1f3d;--teal:#0d7377;--cream:#fafaf8;--surface:#fff;
+  --border:rgba(0,0,0,0.08);--text:#1a1a2e;--muted:#6b7280;
+  --green:#10b981;--gbg:#ecfdf5;--gtxt:#065f46;
+  --red:#ef4444;--rbg:#fef2f2;--rtxt:#991b1b;
+  --blue:#3b82f6;--bbg:#eff6ff;--btxt:#1e40af;
+  --amber:#f59e0b;--abg:#fffbeb;--atxt:#92400e;
+  --purple:#8b5cf6;--pbg:#f5f3ff;--ptxt:#5b21b6;
+}
+[data-theme="dark"]{
+  --cream:#0d1117;--surface:#161b22;--border:rgba(255,255,255,0.08);
+  --text:#e6edf3;--muted:#8b949e;--gbg:#0d2818;--gtxt:#3fb950;
+  --rbg:#2d1117;--rtxt:#f85149;--bbg:#0d1926;--btxt:#58a6ff;
+  --abg:#271d04;--atxt:#e3b341;
+}
+[data-theme="dark"] .hero{background:linear-gradient(145deg,#0d1117,#161b22,#0d7377)}
+[data-theme="dark"] .card,[data-theme="dark"] .stat-card,[data-theme="dark"] .log-entry,[data-theme="dark"] .req-item{background:#161b22}
+[data-theme="dark"] select,[data-theme="dark"] input,[data-theme="dark"] textarea{background:#0d1117;color:#e6edf3;border-color:rgba(255,255,255,.1)}
+[data-theme="dark"] .bottom-nav,[data-theme="dark"] .type-btn,[data-theme="dark"] .role-card,[data-theme="dark"] .login-card{background:#161b22}
+[data-theme="dark"] .num-btn{background:#161b22;color:#e6edf3}
+html,body{height:100%;background:var(--cream);font-family:'Tajawal',sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+.screen{display:none;min-height:100dvh;flex-direction:column}
+.screen.active{display:flex}
+.role-wrap{min-height:100vh;background:linear-gradient(145deg,var(--navy),#1b2a4a,var(--teal));display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.role-card{background:var(--surface);border-radius:24px;padding:2rem;width:100%;max-width:340px;text-align:center}
+.r-logo{font-size:40px;margin-bottom:.5rem}
+.r-title{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:.25rem}
+.r-sub{font-size:13px;color:var(--muted);margin-bottom:1.5rem}
+.r-btns{display:flex;flex-direction:column;gap:10px}
+.r-btn{padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.r-btn.emp{background:var(--gbg);color:var(--gtxt);border:1.5px solid var(--green)}
+.r-btn.mgr{background:var(--bbg);color:var(--btxt);border:1.5px solid var(--blue)}
+.r-btn.adm{background:var(--navy);color:#fff}
+.login-wrap{min-height:100vh;background:linear-gradient(145deg,var(--navy),#1b2a4a,var(--teal));display:flex;align-items:center;justify-content:center;padding:1.5rem;display:none}
+.login-card{background:var(--surface);border-radius:24px;padding:2rem;width:100%;max-width:340px;text-align:center}
+.l-icon{font-size:36px;margin-bottom:.5rem}
+.l-title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:.25rem}
+.l-sub{font-size:13px;color:var(--muted);margin-bottom:1.25rem}
+.l-inp{width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-family:'Tajawal',sans-serif;outline:none;text-align:center;color:var(--text);margin-bottom:10px;background:var(--cream)}
+.l-inp:focus{border-color:var(--teal)}
+.l-btn{width:100%;padding:14px;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer;color:#fff;background:var(--navy)}
+.l-back{margin-top:10px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:'Tajawal',sans-serif}
+.l-err{color:var(--red);font-size:13px;margin-top:6px;min-height:18px}
+.hero{background:linear-gradient(145deg,var(--navy) 0%,#1b2a4a 60%,var(--teal) 100%);padding:2.25rem 1.5rem 1.25rem;position:relative;overflow:hidden}
+.hero-logo{font-size:11px;letter-spacing:.15em;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:.4rem}
+.hero-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:.2rem}
+.hero-date{font-size:12px;color:rgba(255,255,255,.6)}
+.hero-time{font-size:34px;font-weight:300;color:#fff;letter-spacing:-1px;margin-top:.2rem}
+.h-btns{position:absolute;top:1rem;left:1rem;display:flex;gap:6px}
+.hbtn{background:rgba(255,255,255,.15);border:none;border-radius:50%;width:34px;height:34px;font-size:14px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center}
+.body-area{padding:1rem;flex:1;overflow-y:auto}
+.card{background:var(--surface);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.05);border:1px solid var(--border);padding:1.15rem;margin-bottom:.875rem}
+.card-label{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:.6rem}
+.sel-wrap{position:relative}
+.sel-wrap::after{content:'▾';position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:13px}
+select,input[type="time"],input[type="text"],input[type="number"],input[type="email"],input[type="date"],input[type="password"]{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Tajawal',sans-serif;background:var(--cream);color:var(--text);outline:none}
+select{padding-left:32px;appearance:none;-webkit-appearance:none}
+select:focus,input:focus,textarea:focus{border-color:var(--teal)}
+textarea{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Tajawal',sans-serif;background:var(--cream);color:var(--text);outline:none;resize:none}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.type-btn{padding:.9rem .5rem;border-radius:10px;border:1.5px solid var(--border);background:var(--cream);cursor:pointer;text-align:center;font-family:'Tajawal',sans-serif;-webkit-tap-highlight-color:transparent}
+.type-btn .ti{font-size:22px;display:block;margin-bottom:4px}
+.type-btn .tl{font-size:12px;font-weight:700;display:block}
+.type-btn .ts{font-size:10px;color:var(--muted);display:block;margin-top:2px}
+.sel-in{background:var(--gbg);border-color:var(--green)}.sel-in .tl{color:var(--gtxt)}
+.sel-out{background:var(--rbg);border-color:var(--red)}.sel-out .tl{color:var(--rtxt)}
+.sel-vac{background:var(--bbg);border-color:var(--blue)}.sel-vac .tl{color:var(--btxt)}
+.sel-abs{background:var(--abg);border-color:var(--amber)}.sel-abs .tl{color:var(--atxt)}
+.btn{padding:13px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.98);opacity:.9}
+.btn-teal{background:var(--teal)}.btn-green{background:var(--gbg);color:var(--gtxt);border:1px solid var(--green)}
+.btn-muted{background:var(--cream);color:var(--muted);border:1.5px solid var(--border)}.btn-sm{padding:8px 14px;font-size:12px;width:auto}
+.toast{position:fixed;top:1.25rem;left:50%;transform:translateX(-50%) translateY(-120px);background:var(--green);color:#fff;padding:11px 22px;border-radius:100px;font-size:13px;font-weight:700;z-index:999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;font-family:'Tajawal',sans-serif}
+.toast.show{transform:translateX(-50%) translateY(0)}.toast.err{background:var(--red)}
+.ann-bar{display:none;background:var(--navy);color:#fff;text-align:center;padding:10px 40px;font-size:13px;font-weight:500;position:relative;line-height:1.5}
+.ann-bar.show{display:block}
+.ann-close{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer}
+.timer-card{display:none;background:linear-gradient(135deg,var(--teal),var(--navy));border-radius:14px;padding:1.15rem;margin-bottom:.875rem;color:#fff;text-align:center}
+.timer-card.show{display:block}
+.timer-disp{font-size:40px;font-weight:300;letter-spacing:2px;margin:.3rem 0}
+.timer-lbl{font-size:11px;opacity:.7;letter-spacing:.08em;text-transform:uppercase}
+.timer-emp{font-size:12px;opacity:.8;margin-bottom:.75rem}
+.timer-out{background:rgba(255,255,255,.2);border:none;color:#fff;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer}
+.reminder{display:none;background:var(--abg);border:1.5px solid var(--amber);border-radius:10px;padding:10px 14px;margin-bottom:.875rem;font-size:13px;color:var(--atxt);font-weight:500}
+.reminder.show{display:block}
+.once-warn{display:none;background:var(--rbg);border:1.5px solid var(--red);border-radius:10px;padding:10px 14px;margin-bottom:.875rem;font-size:13px;color:var(--rtxt);font-weight:500}
+.once-warn.show{display:block}
+.urgent-bar{display:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:11px 14px;margin-bottom:.875rem;border-radius:12px;font-size:13px;font-weight:500;position:relative}
+.urgent-bar.show{display:block}
+.urg-close{position:absolute;top:8px;left:10px;background:none;border:none;color:rgba(255,255,255,.8);font-size:16px;cursor:pointer}
+.log-entry{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--cream);margin-bottom:7px}
+.log-av{width:36px;height:36px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.log-info{flex:1;min-width:0}
+.log-name{font-size:14px;font-weight:700}
+.log-meta{font-size:11px;color:var(--muted);margin-top:1px;line-height:1.4}
+.badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:100px;flex-shrink:0}
+.b-in{background:var(--gbg);color:var(--gtxt)}.b-out{background:var(--rbg);color:var(--rtxt)}
+.b-vac{background:var(--bbg);color:var(--btxt)}.b-abs{background:var(--abg);color:var(--atxt)}
+.b-pend{background:var(--abg);color:var(--atxt)}.b-appr{background:var(--gbg);color:var(--gtxt)}.b-rej{background:var(--rbg);color:var(--rtxt)}
+.hc{display:inline-block;background:var(--bbg);color:var(--btxt);font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-right:3px}
+.hc.warn{background:var(--abg);color:var(--atxt)}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.stat-card{background:var(--surface);border-radius:10px;padding:.875rem;border:1px solid var(--border);text-align:center}
+.stat-num{font-size:28px;font-weight:700}.stat-lbl{font-size:11px;color:var(--muted);font-weight:700;margin-top:2px}
+.sg{color:var(--green)}.sr{color:var(--red)}.sb{color:var(--blue)}.sa{color:var(--amber)}.sp{color:var(--purple)}
+.ftabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.875rem}
+.ftab{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;font-family:'Tajawal',sans-serif;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.ftab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:.6rem}
+.cal-hdr{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:3px 0}
+.cal-day{text-align:center;padding:5px 2px;border-radius:7px;font-size:12px;min-height:28px;display:flex;align-items:center;justify-content:center}
+.cal-day.present{background:var(--gbg)}.cal-day.present span{color:var(--gtxt);font-weight:700}
+.cal-day.absent{background:var(--rbg)}.cal-day.absent span{color:var(--rtxt);font-weight:700}
+.cal-day.vacation{background:var(--bbg)}.cal-day.vacation span{color:var(--btxt);font-weight:700}
+.cal-day.today{border:2px solid var(--teal)}.cal-day.empty{opacity:0}
+.cal-nav{display:flex;justify-content:space-between;align-items:center}
+.cal-nav button{background:none;border:1.5px solid var(--border);border-radius:8px;padding:4px 12px;font-size:16px;cursor:pointer;color:var(--text)}
+.cal-nav-title{font-size:14px;font-weight:700;color:var(--text)}
+.hol-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--border);margin-bottom:7px}
+.hol-icon{font-size:20px;flex-shrink:0;width:32px;text-align:center}
+.hol-info{flex:1}.hol-name{font-size:14px;font-weight:700}.hol-date{font-size:12px;color:var(--muted);margin-top:2px}
+.hol-days{font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;flex-shrink:0}
+.next-hol{background:linear-gradient(135deg,var(--navy),var(--teal));border-radius:14px;padding:1.15rem;margin-bottom:1rem;color:#fff;text-align:center}
+.next-hol-lbl{font-size:11px;opacity:.7;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.3rem}
+.next-hol-name{font-size:18px;font-weight:700;margin-bottom:.25rem}
+.next-hol-days{font-size:32px;font-weight:300;margin-top:.5rem}
+.prof-av{width:70px;height:70px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin:0 auto .75rem}
+.msg-item{background:var(--surface);border-radius:10px;border:1px solid var(--border);padding:10px;margin-bottom:7px}
+.msg-item.unread{border-color:var(--amber);background:var(--abg)}
+.msg-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.msg-type{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.m-urgent{background:var(--rbg);color:var(--rtxt)}.m-personal{background:var(--bbg);color:var(--btxt)}
+.msg-date{font-size:11px;color:var(--muted)}.msg-text{font-size:13px;line-height:1.6}
+.msg-tpls{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.msg-tpl{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-family:'Tajawal',sans-serif;color:var(--text)}
+.req-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);margin-bottom:7px}
+.req-info{flex:1}.req-name{font-size:14px;font-weight:700}.req-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.req-actions{display:flex;gap:6px}
+.req-appr,.req-rej{border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif;border:none}
+.req-appr{background:var(--gbg);color:var(--gtxt)}.req-rej{background:var(--rbg);color:var(--rtxt)}
+.stars{display:flex;gap:8px;justify-content:center;margin:10px 0}
+.star{font-size:28px;cursor:pointer;opacity:.3;transition:opacity .15s}.star.active{opacity:1}
+.pin-dots{display:flex;gap:10px;justify-content:center;margin:1rem 0}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:var(--cream);transition:all .2s}
+.pin-dot.filled{background:var(--navy);border-color:var(--navy)}
+.pin-dot.error{background:var(--red);border-color:var(--red)}
+.pin-dot.ok{background:var(--green);border-color:var(--green)}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:1rem}
+.num-btn{padding:.9rem;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);font-size:20px;font-weight:700;font-family:'Tajawal',sans-serif;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.num-btn:active{background:var(--navy);color:#fff;transform:scale(.95)}
+.pin-name{font-size:16px;font-weight:700;text-align:center;margin-bottom:.25rem}
+.pin-hint{font-size:12px;color:var(--muted);text-align:center}
+.pin-err{font-size:13px;color:var(--rtxt);text-align:center;margin-top:.5rem;min-height:18px}
+.chart-bar-wrap{margin-bottom:.5rem}
+.chart-bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.chart-bar-bg{background:var(--border);border-radius:4px;height:8px;overflow:hidden}
+.chart-bar-fill{height:8px;border-radius:4px;transition:width .5s}
+.payroll-total-box{background:var(--gbg);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;margin:10px 0}
+.bonus-item{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.bonus-remove{background:var(--rbg);color:var(--rtxt);border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:12px;flex-shrink:0}
+.comm-row{display:flex;gap:8px}.comm-row select{width:110px;flex-shrink:0}
+.tbl-wrap{background:var(--surface);border-radius:14px;border:1px solid var(--border);overflow:hidden;margin-bottom:1rem}
+table{width:100%;border-collapse:collapse;min-width:500px}
+.tbl-scroll{overflow-x:auto}
+thead tr{background:var(--cream)}
+th{padding:9px 12px;text-align:right;font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
+td{padding:9px 12px;font-size:13px;border-top:1px solid var(--border)}
+tr:hover td{background:rgba(0,0,0,.02)}
+.f-group{margin-bottom:10px}
+.f-group label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.conn-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:4px;vertical-align:middle}
+.save-msg{font-size:12px;text-align:center;margin-top:6px;min-height:18px}
+.empty{text-align:center;padding:2rem 1rem;color:var(--muted)}
+.empty .ei{font-size:38px;margin-bottom:.5rem}.empty p{font-size:13px}
+.loading{text-align:center;padding:1.5rem;color:var(--muted);font-size:13px}
+.copy-btn{width:100%;padding:12px;background:var(--surface);color:var(--navy);border:1.5px solid var(--navy);border-radius:10px;font-size:13px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer;margin-top:4px}
+.bottom-nav{display:flex;background:var(--surface);border-top:1px solid var(--border);padding:.5rem 0 env(safe-area-inset-bottom,.5rem)}
+.nav-btn{flex:1;padding:7px 0 4px;background:none;border:none;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:9px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent}
+.nav-btn .ni{font-size:18px}
+.nav-btn.active{color:var(--teal)}
+.unread-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;margin-right:3px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- ROLE SELECTION -->
+<div class="role-wrap" id="role-wrap">
+  <div class="role-card">
+    <div class="r-logo">🌹</div>
+    <div class="r-title">Lowe's Professional</div>
+    <div class="r-sub">نظام متكامل للحضور والإدارة</div>
+    <div class="r-btns">
+      <button class="r-btn emp" onclick="enterEmp()">👤 دخول كموظف</button>
+      <button class="r-btn mgr" onclick="showLogin('manager')">👩‍💼 دخول كمدير</button>
+      <button class="r-btn adm" onclick="showLogin('admin')">🔑 دخول كأدمن</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <div class="l-icon" id="l-icon">🔑</div>
+    <div class="l-title" id="l-title">كلمة السر</div>
+    <div class="l-sub" id="l-sub">أدخل كلمة السر للمتابعة</div>
+    <input type="password" id="l-pass" class="l-inp" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="l-btn" onclick="doLogin()">دخول</button>
+    <div class="l-err" id="l-err"></div>
+    <button class="l-back" onclick="backRoles()">← رجوع</button>
+  </div>
+</div>
+
+<!-- ANN BAR -->
+<div class="ann-bar" id="ann-bar"><button class="ann-close" onclick="closeAnn()">✕</button><span id="ann-text"></span></div>
+
+<!-- REGISTER -->
+<div class="screen" id="screen-register">
+  <div class="hero">
+    <div class="h-btns"><button class="hbtn" onclick="toggleTheme()" id="theme-btn">🌙</button><button class="hbtn" onclick="toggleLang()" id="lang-btn" style="font-size:11px;font-weight:700">EN</button></div>
+    <div class="hero-logo">Lowe's Professional</div>
+    <div class="hero-title">تسجيل الحضور</div>
+    <div class="hero-date" id="r-date"></div>
+    <div class="hero-time" id="r-time"></div>
+  </div>
+  <div class="body-area">
+    <div class="urgent-bar" id="urgent-bar"><button class="urg-close" onclick="closeUrgent()">✕</button><div style="font-size:11px;opacity:.8;margin-bottom:3px">📢 رسالة من الإدارة</div><div id="urgent-text"></div></div>
+    <div class="timer-card" id="timer-card"><div class="timer-lbl">وقت منذ تسجيل الدخول</div><div class="timer-disp" id="timer-disp">00:00:00</div><div class="timer-emp" id="timer-emp"></div><button class="timer-out" onclick="quickOut()">🚪 تسجيل خروج الآن</button></div>
+    <div class="reminder" id="reminder"></div>
+    <div class="once-warn" id="once-warn"></div>
+    <div class="card">
+      <div class="card-label">القسم</div>
+      <div class="sel-wrap" style="margin-bottom:10px"><select id="team-sel" onchange="filterTeam(this.value)"><option value="">اختر القسم</option><option value="syria">🟩 تيم سوريا</option><option value="turkey">🇹🇷 تيم Lowes تركيا</option><option value="social">📱 تيم السوشال ميديا</option></select></div>
+      <div class="card-label">اسم الموظف</div>
+      <div class="sel-wrap"><select id="emp-sel"><option value="">اختر القسم أولاً</option></select></div>
+    </div>
+    <div class="card">
+      <div class="card-label">نوع التسجيل</div>
+      <div class="type-grid">
+        <button class="type-btn" onclick="setType(this,'in','sel-in')"><span class="ti">✅</span><span class="tl">دخول</span><span class="ts">Check In</span></button>
+        <button class="type-btn" onclick="setType(this,'out','sel-out')"><span class="ti">🚪</span><span class="tl">خروج</span><span class="ts">Check Out</span></button>
+        <button class="type-btn" onclick="setType(this,'vac','sel-vac')"><span class="ti">🌙</span><span class="tl">إجازة</span><span class="ts">Day Off</span></button>
+        <button class="type-btn" onclick="setType(this,'abs','sel-abs')"><span class="ti">⚠️</span><span class="tl">غياب</span><span class="ts">Absent</span></button>
+      </div>
+    </div>
+    <div class="card" id="time-card">
+      <div class="card-label">الوقت</div>
+      <div class="row2"><div class="f-group"><label>دخول</label><input type="time" id="t-in"></div><div class="f-group"><label>خروج</label><input type="time" id="t-out"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">ملاحظة (اختياري)</div>
+      <textarea id="note-area" rows="2" placeholder="أضف ملاحظة..."></textarea>
+    </div>
+    <button class="btn" onclick="submitReg()">تسجيل الآن</button>
+    <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--muted)"><span class="conn-dot" id="conn-dot"></span><span id="conn-txt">متصل</span></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="goEmp('register',this)"><span class="ni">📝</span>تسجيل</button>
+    <button class="nav-btn" onclick="goEmp('log',this)"><span class="ni">📋</span>السجل</button>
+    <button class="nav-btn" onclick="goEmp('calendar',this)"><span class="ni">📆</span>تقويم</button>
+    <button class="nav-btn" onclick="goEmp('holidays',this)"><span class="ni">🌴</span>عطل</button>
+    <button class="nav-btn" onclick="goEmp('profile',this)"><span class="ni">👤</span>بروفايل</button>
+  </nav>
+</div>
+
+<!-- LOG -->
+<div class="screen" id="screen-log">
+  <div class="hero" style="padding-bottom:1.25rem"><div class="hero-logo">Lowe's Professional</div><div class="hero-title">سجل اليوم</div><div class="hero-date" id="l-date"></div></div>
+  <div class="body-area">
+    <div id="log-empty" class="empty"><div class="ei">📭</div><p>لا يوجد تسجيلات</p></div>
+    <div id="log-list"></div>
+    <button class="copy-btn" id="copy-btn" style="display:none" onclick="copyLog()">📋 نسخ لـ Excel</button>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="goEmp('register',this)"><span class="ni">📝</span>تسجيل</button>
+    <button class="nav-btn active" onclick="goEmp('log',this)"><span class="ni">📋</span>السجل</button>
+    <button class="nav-btn" onclick="goEmp('calendar',this)"><span class="ni">📆</span>تقويم</button>
+    <button class="nav-btn" onclick="goEmp('holidays',this)"><span class="ni">🌴</span>عطل</button>
+    <button class="nav-btn" onclick="goEmp('profile',this)"><span class="ni">👤</span>بروفايل</button>
+  </nav>
+</div>
+
+<!-- CALENDAR -->
+<div class="screen" id="screen-calendar">
+  <div class="hero" style="padding-bottom:1.25rem"><div class="hero-logo">Lowe's Professional</div><div class="hero-title">تقويم الحضور</div><div class="hero-date" id="c-date"></div></div>
+  <div class="body-area">
+    <div class="card">
+      <div class="cal-nav"><button onclick="calPrev()">‹</button><div class="cal-nav-title" id="cal-label"></div><button onclick="calNext()">›</button></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:.75rem;flex-wrap:wrap">
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:3px;background:var(--gbg);border:1px solid var(--green)"></div>حضور</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:3px;background:var(--rbg);border:1px solid var(--red)"></div>غياب</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:3px;background:var(--bbg);border:1px solid var(--blue)"></div>إجازة</span>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num sg" id="cal-p">0</div><div class="stat-lbl">حضور</div></div>
+      <div class="stat-card"><div class="stat-num sr" id="cal-a">0</div><div class="stat-lbl">غياب</div></div>
+      <div class="stat-card"><div class="stat-num sb" id="cal-v">0</div><div class="stat-lbl">إجازة</div></div>
+      <div class="stat-card"><div class="stat-num sa" id="cal-h">0h</div><div class="stat-lbl">ساعات</div></div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="goEmp('register',this)"><span class="ni">📝</span>تسجيل</button>
+    <button class="nav-btn" onclick="goEmp('log',this)"><span class="ni">📋</span>السجل</button>
+    <button class="nav-btn active" onclick="goEmp('calendar',this)"><span class="ni">📆</span>تقويم</button>
+    <button class="nav-btn" onclick="goEmp('holidays',this)"><span class="ni">🌴</span>عطل</button>
+    <button class="nav-btn" onclick="goEmp('profile',this)"><span class="ni">👤</span>بروفايل</button>
+  </nav>
+</div>
+
+<!-- HOLIDAYS -->
+<div class="screen" id="screen-holidays">
+  <div class="hero" style="padding-bottom:1.25rem"><div class="hero-logo">Lowe's Professional</div><div class="hero-title">العطل والإجازات</div><div class="hero-date" id="h-date"></div></div>
+  <div class="body-area">
+    <div class="next-hol"><div class="next-hol-lbl">العطلة القادمة</div><div class="next-hol-name" id="next-hol-name">—</div><div style="font-size:12px;opacity:.8" id="next-hol-date"></div><div class="next-hol-days" id="next-hol-days"></div></div>
+    <div class="hol-item"><div class="hol-icon">🌙</div><div class="hol-info"><div class="hol-name">عيد الفطر</div><div class="hol-date">حسب الرؤية</div></div><span class="hol-days b-in">3 أيام</span></div>
+    <div class="hol-item"><div class="hol-icon">🐑</div><div class="hol-info"><div class="hol-name">عيد الأضحى</div><div class="hol-date">حسب الرؤية</div></div><span class="hol-days b-in">4 أيام</span></div>
+    <div class="hol-item"><div class="hol-icon">✊</div><div class="hol-info"><div class="hol-name">عيد الثورة السورية</div><div class="hol-date">18 آذار</div></div><span class="hol-days b-vac">يوم</span></div>
+    <div class="hol-item"><div class="hol-icon">👷</div><div class="hol-info"><div class="hol-name">عيد العمال</div><div class="hol-date">1 أيار</div></div><span class="hol-days b-vac">يوم</span></div>
+    <div class="hol-item"><div class="hol-icon">🕊️</div><div class="hol-info"><div class="hol-name">عيد التحرير</div><div class="hol-date">8 كانون الأول</div></div><span class="hol-days b-vac">يوم</span></div>
+    <div class="hol-item"><div class="hol-icon">🎆</div><div class="hol-info"><div class="hol-name">رأس السنة</div><div class="hol-date">1 كانون الثاني</div></div><span class="hol-days b-abs">يوم</span></div>
+    <div class="hol-item"><div class="hol-icon">🎂</div><div class="hol-info"><div class="hol-name">عيد الميلاد</div><div class="hol-date">نفس أسبوع الميلاد</div></div><span class="hol-days b-pend">يوم مدفوع</span></div>
+    <div class="card" style="margin-top:.5rem"><div style="font-size:13px;color:var(--muted);line-height:1.7"><strong style="color:var(--text)">الإجازة السنوية:</strong> 15 يوماً بعد سنة خدمة — يمكن تقسيمها بموافقة الإدارة.</div></div>
+    <div class="card">
+      <div class="card-label">📨 طلب إجازة</div>
+      <div class="sel-wrap" style="margin-bottom:8px"><select id="lr-team" onchange="filterLrTeam(this.value)"><option value="">القسم</option><option value="syria">🟩 سوريا</option><option value="turkey">🇹🇷 تركيا</option><option value="social">📱 سوشال</option></select></div>
+      <div class="sel-wrap" style="margin-bottom:8px"><select id="lr-emp"><option value="">اسمك</option></select></div>
+      <div class="row2" style="margin-bottom:8px"><div class="f-group"><label>من</label><input type="date" id="lr-start"></div><div class="f-group"><label>إلى</label><input type="date" id="lr-end"></div></div>
+      <textarea id="lr-reason" rows="2" placeholder="سبب الإجازة..." style="margin-bottom:8px"></textarea>
+      <button class="btn btn-teal" onclick="submitLeave()">📨 إرسال الطلب</button>
+      <div class="save-msg" id="lr-msg"></div>
+    </div>
+    <div class="card-label">طلباتي السابقة</div>
+    <div id="my-leaves"><div class="loading">...</div></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="goEmp('register',this)"><span class="ni">📝</span>تسجيل</button>
+    <button class="nav-btn" onclick="goEmp('log',this)"><span class="ni">📋</span>السجل</button>
+    <button class="nav-btn" onclick="goEmp('calendar',this)"><span class="ni">📆</span>تقويم</button>
+    <button class="nav-btn active" onclick="goEmp('holidays',this)"><span class="ni">🌴</span>عطل</button>
+    <button class="nav-btn" onclick="goEmp('profile',this)"><span class="ni">👤</span>بروفايل</button>
+  </nav>
+</div>
+
+<!-- PROFILE -->
+<div class="screen" id="screen-profile">
+  <div class="hero" style="padding-bottom:1.25rem"><div class="hero-logo">Lowe's Professional</div><div class="hero-title">بروفايلي</div><div class="hero-date" id="p-date"></div></div>
+  <div class="body-area">
+    <div class="card">
+      <div class="card-label">اختر اسمك</div>
+      <div class="sel-wrap" style="margin-bottom:8px"><select id="pf-team" onchange="filterPfTeam(this.value)"><option value="">القسم</option><option value="syria">🟩 سوريا</option><option value="turkey">🇹🇷 تركيا</option><option value="social">📱 سوشال</option></select></div>
+      <div class="sel-wrap"><select id="pf-emp" onchange="loadMyProf(this.value)"><option value="">اسمك</option></select></div>
+    </div>
+    <div id="pf-content" style="display:none">
+      <div style="text-align:center;margin-bottom:1rem">
+        <div class="prof-av" id="pf-av"></div>
+        <div style="font-size:18px;font-weight:700" id="pf-name"></div>
+        <div style="font-size:13px;color:var(--muted)" id="pf-team-disp"></div>
+        <div id="pf-rating" style="margin-top:4px;font-size:14px"></div>
+      </div>
+      <div class="card"><div class="card-label">📬 رسائلي <span class="unread-dot" id="unread-dot" style="display:none"></span></div><div id="pf-msgs"><div class="loading">...</div></div></div>
+      <div class="card">
+        <div class="card-label">📝 معلوماتي الشخصية</div>
+        <div class="f-group"><label>الإيميل</label><input type="email" id="pf-email" placeholder="email@example.com"></div>
+        <div class="f-group"><label>العنوان</label><input type="text" id="pf-address" placeholder="المدينة، الحي"></div>
+        <div class="f-group"><label>الواردية</label><div class="sel-wrap"><select id="pf-shift"><option value="">اختر</option><option value="صباحية">🌅 صباحية</option><option value="مسائية">🌆 مسائية</option><option value="ليلية">🌙 ليلية</option><option value="مرنة">⏰ مرنة</option></select></div></div>
+        <div class="row2"><div class="f-group"><label>بداية الدوام</label><input type="time" id="pf-start"></div><div class="f-group"><label>نهاية الدوام</label><input type="time" id="pf-end"></div></div>
+        <button class="btn btn-teal" onclick="savePfPersonal()">💾 حفظ</button>
+        <div class="save-msg" id="pf-msg"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">📋 المعلومات الإدارية</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">تاريخ الانضمام</span><span style="font-weight:700" id="pf-join">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">الإجازات المتبقية</span><span style="font-weight:700;color:var(--green)" id="pf-leaves">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">أيام العطل</span><span style="font-weight:700" id="pf-offdays">—</span></div>
+          <div style="padding:7px 0;font-size:13px"><div style="color:var(--muted);margin-bottom:4px">ملاحظات الإدارة</div><div id="pf-notes" style="line-height:1.6">—</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="goEmp('register',this)"><span class="ni">📝</span>تسجيل</button>
+    <button class="nav-btn" onclick="goEmp('log',this)"><span class="ni">📋</span>السجل</button>
+    <button class="nav-btn" onclick="goEmp('calendar',this)"><span class="ni">📆</span>تقويم</button>
+    <button class="nav-btn" onclick="goEmp('holidays',this)"><span class="ni">🌴</span>عطل</button>
+    <button class="nav-btn active" onclick="goEmp('profile',this)"><span class="ni">👤</span>بروفايل</button>
+  </nav>
+</div>
+
+<!-- PIN -->
+<div class="screen" id="screen-pin">
+  <div class="hero" style="padding-bottom:1.5rem"><div class="hero-logo">Lowe's Professional</div><div class="hero-title">التحقق من الهوية</div><div class="hero-date" id="pin-date"></div></div>
+  <div class="body-area" style="display:flex;flex-direction:column;justify-content:center">
+    <div class="card" style="text-align:center">
+      <div class="pin-name" id="pin-name"></div>
+      <div class="pin-hint">أدخل الـ PIN الخاص بك</div>
+      <div class="pin-dots"><div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div><div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div></div>
+      <div class="pin-err" id="pin-err"></div>
+      <div class="numpad">
+        <button class="num-btn" onclick="pp('1')">1</button><button class="num-btn" onclick="pp('2')">2</button><button class="num-btn" onclick="pp('3')">3</button>
+        <button class="num-btn" onclick="pp('4')">4</button><button class="num-btn" onclick="pp('5')">5</button><button class="num-btn" onclick="pp('6')">6</button>
+        <button class="num-btn" onclick="pp('7')">7</button><button class="num-btn" onclick="pp('8')">8</button><button class="num-btn" onclick="pp('9')">9</button>
+        <button class="num-btn" style="font-size:11px;color:var(--muted)" onclick="pinBuf='';pDots()">مسح</button>
+        <button class="num-btn" onclick="pp('0')">0</button>
+        <button class="num-btn" style="font-size:16px" onclick="pinBuf=pinBuf.slice(0,-1);pDots()">⌫</button>
+      </div>
+    </div>
+    <button class="btn btn-muted" style="margin-top:.5rem" onclick="goEmp('register',null)">← رجوع</button>
+  </div>
+</div>
+
+<!-- MANAGER -->
+<div class="screen" id="screen-manager">
+  <div class="hero" style="padding-bottom:1.25rem">
+    <div class="h-btns"><button class="hbtn" onclick="toggleTheme()">🌙</button></div>
+    <div class="hero-logo">Lowe's Professional · مدير</div>
+    <div class="hero-title">لوحة المدير</div>
+    <div class="hero-date" id="mgr-date"></div>
+  </div>
+  <div class="body-area">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num sg" id="mgr-p">0</div><div class="stat-lbl">✅ حضور</div></div>
+      <div class="stat-card"><div class="stat-num sr" id="mgr-a">0</div><div class="stat-lbl">❌ غياب</div></div>
+      <div class="stat-card"><div class="stat-num sb" id="mgr-v">0</div><div class="stat-lbl">🌙 إجازة</div></div>
+      <div class="stat-card"><div class="stat-num sa" id="mgr-h">0h</div><div class="stat-lbl">⏱️ ساعات</div></div>
+    </div>
+    <div class="ftabs" id="mgr-team-tabs">
+      <button class="ftab active" onclick="mgrTFilter('all',this)">الكل</button>
+      <button class="ftab" onclick="mgrTFilter('تيم سوريا',this)">🟩 سوريا</button>
+      <button class="ftab" onclick="mgrTFilter('تيم Lowes تركيا',this)">🇹🇷 تركيا</button>
+      <button class="ftab" onclick="mgrTFilter('تيم السوشال ميديا',this)">📱 سوشال</button>
+    </div>
+    <div class="ftabs" id="mgr-status-tabs">
+      <button class="ftab active" onclick="mgrSFilter('all',this)">الكل</button>
+      <button class="ftab" onclick="mgrSFilter('✅ حاضر',this)">✅ حاضر</button>
+      <button class="ftab" onclick="mgrSFilter('🚪 خروج',this)">🚪 خروج</button>
+      <button class="ftab" onclick="mgrSFilter('🌙 إجازة',this)">🌙 إجازة</button>
+      <button class="ftab" onclick="mgrSFilter('❌ غياب',this)">❌ غياب</button>
+    </div>
+    <div id="mgr-log"><div class="loading">...</div></div>
+    <div class="card" style="margin-top:.5rem">
+      <div class="card-label">📢 نشر إعلان</div>
+      <input type="text" id="mgr-ann" placeholder="اكتب الإعلان..." style="margin-bottom:8px">
+      <div style="display:flex;gap:8px"><button class="btn btn-teal" onclick="doPublishAnn('mgr-ann')">نشر</button><button class="btn btn-muted" onclick="doClearAnn()">مسح</button></div>
+    </div>
+    <div class="card">
+      <div class="card-label">📨 طلبات الإجازة</div>
+      <div id="mgr-leaves"><div class="loading">...</div></div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn active"><span class="ni">📊</span>لوحة</button>
+    <button class="nav-btn" onclick="logout()"><span class="ni">🚪</span>خروج</button>
+  </nav>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div class="screen" id="screen-admin">
+  <div class="hero" style="padding-bottom:1.25rem">
+    <div class="h-btns"><button class="hbtn" onclick="toggleTheme()">🌙</button></div>
+    <div class="hero-logo">Lowe's Professional · أدمن</div>
+    <div class="hero-title">لوحة التحكم</div>
+    <div class="hero-date" id="adm-date"></div>
+  </div>
+  <div class="body-area">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num sg" id="adm-p">0</div><div class="stat-lbl">✅ حضور</div></div>
+      <div class="stat-card"><div class="stat-num sr" id="adm-a">0</div><div class="stat-lbl">❌ غياب</div></div>
+      <div class="stat-card"><div class="stat-num sb" id="adm-v">0</div><div class="stat-lbl">🌙 إجازة</div></div>
+      <div class="stat-card"><div class="stat-num sa" id="adm-h">0h</div><div class="stat-lbl">⏱️ ساعات</div></div>
+    </div>
+    <div class="card"><div class="card-label">📊 الحضور بالقسم</div><div id="adm-chart"></div></div>
+    <div class="ftabs" id="adm-team-tabs">
+      <button class="ftab active" onclick="admTFilter('all',this)">الكل</button>
+      <button class="ftab" onclick="admTFilter('تيم سوريا',this)">🟩 سوريا</button>
+      <button class="ftab" onclick="admTFilter('تيم Lowes تركيا',this)">🇹🇷 تركيا</button>
+      <button class="ftab" onclick="admTFilter('تيم السوشال ميديا',this)">📱 سوشال</button>
+    </div>
+    <div class="ftabs" id="adm-status-tabs">
+      <button class="ftab active" onclick="admSFilter('all',this)">الكل</button>
+      <button class="ftab" onclick="admSFilter('✅ حاضر',this)">✅ حاضر</button>
+      <button class="ftab" onclick="admSFilter('🚪 خروج',this)">🚪 خروج</button>
+      <button class="ftab" onclick="admSFilter('🌙 إجازة',this)">🌙 إجازة</button>
+      <button class="ftab" onclick="admSFilter('❌ غياب',this)">❌ غياب</button>
+    </div>
+    <input type="text" id="adm-search" placeholder="🔍 بحث باسم الموظف..." oninput="renderAdmDash()" style="margin-bottom:.875rem">
+    <div id="adm-log"><div class="loading">...</div></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="goAdm('admin',this)"><span class="ni">📊</span>لوحة</button>
+    <button class="nav-btn" onclick="goAdm('adm-emp',this)"><span class="ni">👥</span>موظفين</button>
+    <button class="nav-btn" onclick="goAdm('adm-pay',this)"><span class="ni">💰</span>رواتب</button>
+    <button class="nav-btn" onclick="goAdm('adm-rep',this)"><span class="ni">📈</span>تقارير</button>
+    <button class="nav-btn" onclick="goAdm('adm-set',this)"><span class="ni">⚙️</span>إعدادات</button>
+  </nav>
+</div>
+
+<!-- ADMIN EMPLOYEES -->
+<div class="screen" id="screen-adm-emp">
+  <div class="hero" style="padding-bottom:1.25rem"><div class="hero-logo">Lowe's Professional · أدمن</div><div class="hero-title">إدارة الموظفين</div><div class="hero-date" id="adme-date"></div></div>
+  <div class="body-area">
+    <div class="card">
+      <div class="card-label">📨 إرسال رسالة</div>
+      <div class="sel-wrap" style="margin-bottom:8px"><select id="msg-emp"></select></div>
+      <div class="sel-wrap" style="margin-bottom:8px"><select id="msg-type"><option value="personal">💬 شخصية</option><option value="urgent">🚨 عاجلة</option></select></div>
+      <div class="msg-tpls">
+        <button class="msg-tpl" onclick="fillTpl('نسيت تسجل خروج اليوم ⚠️')">نسيت خروج</button>
+        <button class="msg-tpl" onclick="fillTpl('نزل راتبك ✅')">نزل الراتب</button>
+        <button class="msg-tpl" onclick="fillTpl('تمت الموافقة على إجازتك ✅')">موافقة إجازة</button>
+        <button class="msg-tpl" onclick="fillTpl('يرجى مراجعة الإدارة 📋')">مراجعة الإدارة</button>
+      </div>
+      <textarea id="msg-text" rows="2" placeholder="الرسالة..." style="margin-bottom:8px"></textarea>
+      <button class="btn btn-teal" onclick="sendMsg()">📨 إرسال</button>
+      <div class="save-msg" id="msg-st"></div>
+    </div>
+    <div class="card">
+      <div class="card-label">👁️ بروفايل موظف</div>
+      <div class="sel-wrap" style="margin-bottom:8px"><select id="view-emp" onchange="viewProf(this.value)"></select></div>
+      <div id="view-prof-c" style="display:none">
+        <div id="view-prof-info" style="display:flex;flex-direction:column;gap:6px;font-size:13px;margin-bottom:1rem"></div>
+        <div class="card-label">⭐ تقييم الأداء - <span id="perf-month-lbl"></span></div>
+        <div class="stars" id="stars"><span class="star" onclick="setRating(1)">⭐</span><span class="star" onclick="setRating(2)">⭐</span><span class="star" onclick="setRating(3)">⭐</span><span class="star" onclick="setRating(4)">⭐</span><span class="star" onclick="setRating(5)">⭐</span></div>
+        <textarea id="perf-notes" rows="2" placeholder="ملاحظات التقييم..." style="margin-bottom:8px"></textarea>
+        <button class="btn btn-sm btn-teal" onclick="savePerf()">💾 حفظ التقييم</button>
+        <div class="save-msg" id="perf-msg"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">✏️ تعديل بروفايل إداري</div>
+      <div class="sel-wrap" style="margin-bottom:8px"><select id="edit-emp" onchange="loadEditP(this.value)"></select></div>
+      <div id="edit-prof-f" style="display:none">
+        <div class="f-group"><label>تاريخ الانضمام</label><input type="date" id="ep-join"></div>
+        <div class="f-group"><label>الإجازات المتبقية (يوم)</label><input type="number" id="ep-leaves" placeholder="15"></div>
+        <div class="f-group"><label>أيام العطل</label><input type="text" id="ep-offdays" placeholder="الجمعة، السبت"></div>
+        <div class="f-group"><label>ملاحظات إدارية</label><textarea id="ep-notes" rows="2" placeholder="ملاحظات..."></textarea></div>
+        <button class="btn btn-teal" onclick="saveEditP()">💾 حفظ</button>
+        <div class="save-msg" id="ep-msg"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">🔄 تعديل PIN</div>
+      <div class="sel-wrap" style="margin-bottom:8px"><select id="pin-emp"></select></div>
+      <input type="number" id="new-pin" placeholder="PIN جديد (4 أرقام)" maxlength="4" style="margin-bottom:8px">
+      <button class="btn btn-teal" onclick="updatePIN()">تحديث</button>
+      <div class="save-msg" id="pin-msg"></div>
+    </div>
+    <div class="card">
+      <div class="card-label">📨 طلبات الإجازة</div>
+      <div id="adm-leaves"><div class="loading">...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">📢 شريط الإعلانات</div>
+      <input type="text" id="adm-ann" placeholder="الإعلان..." style="margin-bottom:8px">
+      <div style="display:flex;gap:8px"><button class="btn btn-teal" onclick="doPublishAnn('adm-ann')">نشر</button><button class="btn btn-muted" onclick="doClearAnn()">مسح</button></div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="goAdm('admin',this)"><span class="ni">📊</span>لوحة</button>
+    <button class="nav-btn active" onclick="goAdm('adm-emp',this)"><span class="ni">👥</span>موظفين</button>
+    <button class="nav-btn" onclick="goAdm('adm-pay',this)"><span class="ni">💰</span>رواتب</button>
+    <button class="nav-btn" onclick="goAdm('adm-rep',this)"><span class="ni">📈</span>تقارير</button>
+    <button class="nav-btn" onclick="goAdm('adm-set',this)"><span class="ni">⚙️</span>إعدادات</button>
+  </nav>
+</div>
+
+<!-- ADMIN PAYROLL -->
+<div class="screen" id="screen-adm-pay">
+  <div class="hero" style="padding-bottom:1.25rem"><div class="hero-logo">Lowe's Professional · أدمن</div><div class="hero-title">الرواتب الشهرية</div><div class="hero-date" id="pay-date"></div></div>
+  <div class="body-area">
+    <div style="display:flex;gap:8px;margin-bottom:1rem;align-items:center">
+      <div class="sel-wrap" style="flex:1"><select id="pay-month" onchange="loadPayroll()"></select></div>
+      <button class="btn btn-sm btn-green" onclick="exportPayExcel()">📥 Excel</button>
+    </div>
+    <div class="ftabs" id="pay-team-tabs">
+      <button class="ftab active" onclick="payTFilter('all',this)">الكل</button>
+      <button class="ftab" onclick="payTFilter('تيم سوريا',this)">🟩 سوريا</button>
+      <button class="ftab" onclick="payTFilter('تيم Lowes تركيا',this)">🇹🇷 تركيا</button>
+      <button class="ftab" onclick="payTFilter('تيم السوشال ميديا',this)">📱 سوشال</button>
+    </div>
+    <div id="pay-content"><div class="loading">...</div></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="goAdm('admin',this)"><span class="ni">📊</span>لوحة</button>
+    <button class="nav-btn" onclick="goAdm('adm-emp',this)"><span class="ni">👥</span>موظفين</button>
+    <button class="nav-btn active" onclick="goAdm('adm-pay',this)"><span class="ni">💰</span>رواتب</button>
+    <button class="nav-btn" onclick="goAdm('adm-rep',this)"><span class="ni">📈</span>تقارير</button>
+    <button class="nav-btn" onclick="goAdm('adm-set',this)"><span class="ni">⚙️</span>إعدادات</button>
+  </nav>
+</div>
+
+<!-- ADMIN REPORTS -->
+<div class="screen" id="screen-adm-rep">
+  <div class="hero" style="padding-bottom:1.25rem"><div class="hero-logo">Lowe's Professional · أدمن</div><div class="hero-title">التقارير الشهرية</div><div class="hero-date" id="rep-date"></div></div>
+  <div class="body-area">
+    <div style="display:flex;gap:8px;margin-bottom:.875rem;flex-wrap:wrap">
+      <div class="sel-wrap" style="flex:1"><select id="rep-month" onchange="loadReport()"></select></div>
+      <div class="sel-wrap" style="flex:1"><select id="rep-team" onchange="loadReport()"><option value="">كل الأقسام</option><option value="تيم سوريا">🟩 سوريا</option><option value="تيم Lowes تركيا">🇹🇷 تركيا</option><option value="تيم السوشال ميديا">📱 سوشال</option></select></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:.875rem">
+      <input type="text" id="rep-search" placeholder="🔍 بحث بالاسم..." oninput="renderReport()" style="flex:1">
+      <button class="btn btn-sm btn-green" onclick="exportRepExcel()">📥 Excel</button>
+      <button class="btn btn-sm" style="background:var(--abg);color:var(--atxt);border:1px solid var(--amber)" onclick="window.print()">🖨️ PDF</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num sg" id="rep-p">0</div><div class="stat-lbl">إجمالي الحضور</div></div>
+      <div class="stat-card"><div class="stat-num sr" id="rep-a">0</div><div class="stat-lbl">إجمالي الغياب</div></div>
+      <div class="stat-card"><div class="stat-num sa" id="rep-h">0h</div><div class="stat-lbl">إجمالي الساعات</div></div>
+      <div class="stat-card"><div class="stat-num sp" id="rep-e">0</div><div class="stat-lbl">موظف</div></div>
+    </div>
+    <div id="rep-content"><div class="loading">...</div></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="goAdm('admin',this)"><span class="ni">📊</span>لوحة</button>
+    <button class="nav-btn" onclick="goAdm('adm-emp',this)"><span class="ni">👥</span>موظفين</button>
+    <button class="nav-btn" onclick="goAdm('adm-pay',this)"><span class="ni">💰</span>رواتب</button>
+    <button class="nav-btn active" onclick="goAdm('adm-rep',this)"><span class="ni">📈</span>تقارير</button>
+    <button class="nav-btn" onclick="goAdm('adm-set',this)"><span class="ni">⚙️</span>إعدادات</button>
+  </nav>
+</div>
+
+<!-- ADMIN SETTINGS -->
+<div class="screen" id="screen-adm-set">
+  <div class="hero" style="padding-bottom:1.25rem"><div class="hero-logo">Lowe's Professional · أدمن</div><div class="hero-title">الإعدادات</div><div class="hero-date" id="set-date"></div></div>
+  <div class="body-area">
+    <div class="card">
+      <div class="card-label">🔐 تغيير كلمات السر</div>
+      <div style="margin-bottom:1rem">
+        <div class="f-group"><label>كلمة سر المدير الحالية</label><input type="password" id="cur-mgr-p" placeholder="الحالية"></div>
+        <div class="f-group"><label>كلمة سر المدير الجديدة</label><input type="password" id="new-mgr-p" placeholder="الجديدة"></div>
+        <button class="btn btn-teal" onclick="changePass('manager')" style="margin-bottom:4px">تغيير كلمة سر المدير</button>
+        <div class="save-msg" id="mgr-pass-msg"></div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+      <div class="f-group"><label>كلمة سر الأدمن الحالية</label><input type="password" id="cur-adm-p" placeholder="الحالية"></div>
+      <div class="f-group"><label>كلمة سر الأدمن الجديدة</label><input type="password" id="new-adm-p" placeholder="الجديدة"></div>
+      <button class="btn btn-teal" onclick="changePass('admin')">تغيير كلمة سر الأدمن</button>
+      <div class="save-msg" id="adm-pass-msg"></div>
+    </div>
+    <div class="card">
+      <div class="card-label">⚙️ إعدادات الرواتب الثابتة</div>
+      <div class="sel-wrap" style="margin-bottom:8px"><select id="sal-emp" onchange="loadSalSet(this.value)"></select></div>
+      <div id="sal-fields" style="display:none">
+        <div class="row2"><div class="f-group"><label>الراتب الأساسي</label><input type="number" id="sl-base" placeholder="0"></div><div class="f-group"><label>باقة النت</label><input type="number" id="sl-net" placeholder="0"></div></div>
+        <div class="row2"><div class="f-group"><label>بدل طعام</label><input type="number" id="sl-food" placeholder="0"></div><div class="f-group"><label>التارگت الشهري</label><input type="number" id="sl-target" placeholder="0"></div></div>
+        <div class="f-group"><label>عمولة التارگت</label>
+          <div class="comm-row"><div class="sel-wrap"><select id="sl-tc-type"><option value="percentage">نسبة %</option><option value="fixed">ثابت</option></select></div><input type="number" id="sl-tc-val" placeholder="0"></div>
+        </div>
+        <div class="f-group"><label>عمولة المبيعات</label>
+          <div class="comm-row"><div class="sel-wrap"><select id="sl-sc-type"><option value="percentage">نسبة %</option><option value="fixed">ثابت</option></select></div><input type="number" id="sl-sc-val" placeholder="0"></div>
+        </div>
+        <button class="btn btn-teal" onclick="saveSalSet()">💾 حفظ الإعدادات</button>
+        <div class="save-msg" id="sal-msg"></div>
+      </div>
+    </div>
+    <button class="btn btn-muted" onclick="logout()" style="margin-top:.5rem">🚪 تسجيل خروج</button>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="goAdm('admin',this)"><span class="ni">📊</span>لوحة</button>
+    <button class="nav-btn" onclick="goAdm('adm-emp',this)"><span class="ni">👥</span>موظفين</button>
+    <button class="nav-btn" onclick="goAdm('adm-pay',this)"><span class="ni">💰</span>رواتب</button>
+    <button class="nav-btn" onclick="goAdm('adm-rep',this)"><span class="ni">📈</span>تقارير</button>
+    <button class="nav-btn active" onclick="goAdm('adm-set',this)"><span class="ni">⚙️</span>إعدادات</button>
+  </nav>
+</div>
+<script>
+const SUPA_URL="https://fghdumrgimoeqsafdhhh.supabase.co";
+const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaGR1bXJnaW1vZXFzYWZkaGhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxOTE3OTQsImV4cCI6MjA5MTc2Nzc5NH0.e9DiuJySh4WMp7x5ErVV5LqBFawHUESrlGDRb8N5zPM";
+const SHEETS_URL="https://script.google.com/macros/s/AKfycbxoOPnCHC8DHsjiOWumMcmjaP1EqdXcavY3NnmmI9mZysXhQyiKiMvDA1yyC9-DZKlhGg/exec";
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+const COLORS=["#0d7377","#1b2a4a","#f4a261","#10b981","#3b82f6","#8b5cf6","#ef4444","#f59e0b","#ec4899","#14b8a6"];
+const DAYS=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const MONTHS_AR=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const TL={in:"✅ حاضر",out:"🚪 خروج",vac:"🌙 إجازة",abs:"❌ غياب"};
+const TB={in:"b-in",out:"b-out",vac:"b-vac",abs:"b-abs"};
+const FIXED_HOL=[{name:"عيد الثورة السورية",m:3,d:18},{name:"عيد العمال",m:5,d:1},{name:"عيد التحرير",m:12,d:8},{name:"رأس السنة الميلادية",m:1,d:1}];
+let TEAMS={syria:{l:"تيم سوريا",members:[]},turkey:{l:"تيم Lowes تركيا",members:[]},social:{l:"تيم السوشال ميديا",members:[]}};
+let allEmps=[],empPins={},todayRecs=[];
+let role=null,admPasses={manager:"lowes2020",admin:"lowes2026"};
+let selectedType=null,pinBuf="",pinTarget=null;
+let mgrTF="all",mgrSF="all",admTF="all",admSF="all",payTF="all";
+let calY=new Date().getFullYear(),calM=new Date().getMonth();
+let repData=[],currentRating=0,currentPerfEmp="";
+let timerInt=null,ciTime=null;
+let lang=localStorage.getItem("lang")||"ar";
+
+const pad=n=>String(n).padStart(2,"0");
+const todayS=()=>{const n=new Date();return`${n.getFullYear()}/${pad(n.getMonth()+1)}/${pad(n.getDate())}`};
+const currMonth=()=>{const n=new Date();return`${n.getFullYear()}/${pad(n.getMonth()+1)}`};
+const initials=name=>{const p=name.trim().split(" ");return p.length>=2?(p[0][0]+p[1][0]).toUpperCase():name.slice(0,2).toUpperCase()};
+const calcH=(tin,tout)=>{if(!tin||!tout)return 0;const[ih,im]=tin.split(":").map(Number);const[oh,om]=tout.split(":").map(Number);let d=(oh*60+om)-(ih*60+im);if(d<0)d+=1440;return d/60};
+const nowT=()=>{const n=new Date();return`${pad(n.getHours())}:${pad(n.getMinutes())}`};
+const showToast=(msg,type="")=>{const t=document.getElementById("toast");t.textContent=msg;t.className="toast"+(type?" "+type:"");t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500)};
+const setEl=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val};
+const showScr=id=>{document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));const s=document.getElementById("screen-"+id);if(s)s.classList.add("active")};
+
+async function loadEmps(){
+  const{data}=await sb.from("employees").select("*").eq("is_active",true).order("team").order("name");
+  allEmps=data||[];empPins={};TEAMS.syria.members=[];TEAMS.turkey.members=[];TEAMS.social.members=[];
+  allEmps.forEach(e=>{empPins[e.name]=e.pin;if(e.team==="تيم سوريا")TEAMS.syria.members.push(e.name);else if(e.team==="تيم Lowes تركيا")TEAMS.turkey.members.push(e.name);else TEAMS.social.members.push(e.name);});
+  fillEmpSelects();
+}
+async function loadPasses(){
+  const{data}=await sb.from("system_settings").select("*");
+  if(data)data.forEach(r=>{if(r.key==="admin_pass")admPasses.admin=r.value;if(r.key==="manager_pass")admPasses.manager=r.value;});
+}
+async function loadTodayRecs(){
+  const{data}=await sb.from("attendance").select("*").eq("date",todayS()).order("created_at");
+  todayRecs=data||[];renderLog();
+}
+
+function fillEmpSelects(){
+  const ids=["msg-emp","view-emp","edit-emp","pin-emp","sal-emp"];
+  ids.forEach(id=>{
+    const sel=document.getElementById(id);if(!sel)return;
+    sel.innerHTML="<option value=''>اختر الموظف</option>";
+    Object.keys(TEAMS).forEach(tk=>{
+      const og=document.createElement("optgroup");og.label=TEAMS[tk].l;
+      TEAMS[tk].members.forEach(name=>{const o=document.createElement("option");o.value=name;o.textContent=name;og.appendChild(o);});
+      sel.appendChild(og);
+    });
+  });
+}
+
+function toggleTheme(){const d=document.documentElement;const dark=d.getAttribute("data-theme")==="dark";d.setAttribute("data-theme",dark?"light":"dark");document.querySelectorAll("#theme-btn").forEach(b=>b.textContent=dark?"🌙":"☀️");localStorage.setItem("theme",dark?"light":"dark");}
+function initTheme(){const t=localStorage.getItem("theme")||"light";document.documentElement.setAttribute("data-theme",t);document.querySelectorAll("#theme-btn").forEach(b=>b.textContent=t==="dark"?"☀️":"🌙");}
+function toggleLang(){lang=lang==="ar"?"en":"ar";localStorage.setItem("lang",lang);document.documentElement.dir=lang==="ar"?"rtl":"ltr";document.getElementById("lang-btn").textContent=lang==="ar"?"EN":"ع";}
+function updateConn(){const o=navigator.onLine;const d=document.getElementById("conn-dot");const t=document.getElementById("conn-txt");if(d)d.className="conn-dot"+(o?"":"");if(t)t.textContent=o?"متصل":"غير متصل";}
+window.addEventListener("online",()=>{updateConn();loadTodayRecs()});window.addEventListener("offline",updateConn);
+
+function enterEmp(){role="employee";document.getElementById("role-wrap").style.display="none";initEmp();}
+function showLogin(r){role=r;document.getElementById("l-icon").textContent=r==="manager"?"👩‍💼":"🔑";document.getElementById("l-title").textContent=r==="manager"?"كلمة سر المدير":"كلمة سر الأدمن";document.getElementById("l-err").textContent="";document.getElementById("l-pass").value="";document.getElementById("role-wrap").style.display="none";document.getElementById("login-wrap").style.display="flex";}
+function backRoles(){document.getElementById("login-wrap").style.display="none";document.getElementById("role-wrap").style.display="flex";}
+async function doLogin(){
+  const pass=document.getElementById("l-pass").value;
+  if(pass===admPasses[role]){document.getElementById("login-wrap").style.display="none";if(role==="manager")initMgr();else initAdm();}
+  else{document.getElementById("l-err").textContent="❌ كلمة السر غلط";document.getElementById("l-pass").value="";}
+}
+function logout(){role=null;document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById("role-wrap").style.display="flex";}
+
+async function initEmp(){
+  initTheme();updateConn();
+  const n=new Date();const ds=`${DAYS[n.getDay()]}، ${n.getDate()}/${n.getMonth()+1}/${n.getFullYear()}`;
+  ["r-date","l-date","c-date","h-date","p-date","pin-date"].forEach(id=>setEl(id,ds));
+  setEl("r-time",`${pad(n.getHours())}:${pad(n.getMinutes())}`);
+  setInterval(()=>setEl("r-time",nowT()),30000);
+  document.getElementById("t-in").value=nowT();document.getElementById("t-out").value=nowT();
+  showScr("register");await loadTodayRecs();loadUrgentMsg();loadAnnouncement();restoreTimer();checkReminder();
+  setInterval(checkReminder,15*60*1000);renderNextHol();calY=n.getFullYear();calM=n.getMonth();
+}
+
+function goEmp(name,btn){
+  showScr(name);
+  document.querySelectorAll(".bottom-nav .nav-btn").forEach(b=>b.classList.remove("active"));
+  if(btn)btn.classList.add("active");
+  if(name==="log")renderLog();
+  if(name==="calendar")renderCal();
+  if(name==="holidays"){renderNextHol();loadMyLeaves();}
+}
+
+function filterTeam(key){
+  const sel=document.getElementById("emp-sel");sel.innerHTML="<option value=''>اختر اسمك</option>";
+  if(!key||!TEAMS[key])return;
+  TEAMS[key].members.forEach(name=>{const o=document.createElement("option");o.value=name;o.textContent=name;sel.appendChild(o);});
+}
+
+function setType(btn,type,cls){
+  document.querySelectorAll(".type-btn").forEach(b=>b.className="type-btn");btn.classList.add(cls);selectedType=type;
+  document.getElementById("time-card").style.display=(type==="vac"||type==="abs")?"none":"block";
+  if(type==="in")document.getElementById("t-in").value=nowT();if(type==="out")document.getElementById("t-out").value=nowT();
+}
+
+function checkOnce(emp){
+  const hasIn=todayRecs.some(r=>r.employee_name===emp&&r.status===TL.in);
+  const hasOut=todayRecs.some(r=>r.employee_name===emp&&r.status===TL.out);
+  const w=document.getElementById("once-warn");
+  if(hasIn&&hasOut){w.textContent=`${emp} — سجّلت دخولك وخروجك ✅`;w.classList.add("show");return "both";}
+  if(hasIn){w.textContent=`${emp} — سجّلت دخولك، يمكنك تسجيل الخروج فقط`;w.classList.add("show");return "in";}
+  if(hasOut){w.textContent=`${emp} — سجّلت خروجك اليوم`;w.classList.add("show");return "out";}
+  w.classList.remove("show");return "none";
+}
+
+function submitReg(){
+  const tk=document.getElementById("team-sel").value;const emp=document.getElementById("emp-sel").value;
+  if(!tk){showToast("⚠️ اختر القسم","err");return}if(!emp){showToast("⚠️ اختر اسمك","err");return}if(!selectedType){showToast("⚠️ اختر نوع التسجيل","err");return}
+  const st=checkOnce(emp);
+  if(st==="both"){showToast("⚠️ سجّلت اليوم مسبقاً","err");return}if(st==="in"&&selectedType==="in"){showToast("⚠️ سجّلت دخولك اليوم","err");return}if(st==="out"&&selectedType==="out"){showToast("⚠️ سجّلت خروجك اليوم","err");return}
+  pinTarget={emp,tk};pinBuf="";setEl("pin-name",emp);pDots();document.getElementById("pin-err").textContent="";showScr("pin");
+}
+
+function pp(d){if(pinBuf.length>=4)return;pinBuf+=d;pDots();if(pinBuf.length===4)setTimeout(checkPIN,150);}
+function pDots(){for(let i=0;i<4;i++){const d=document.getElementById("pd"+i);if(d)d.className="pin-dot"+(i<pinBuf.length?" filled":"");}}
+function checkPIN(){
+  const correct=empPins[pinTarget.emp];
+  if(pinBuf===correct){document.querySelectorAll(".pin-dot").forEach(d=>d.className="pin-dot ok");setTimeout(doSubmit,500);}
+  else{document.querySelectorAll(".pin-dot").forEach(d=>d.className="pin-dot error");document.getElementById("pin-err").textContent="❌ الرقم غلط";setTimeout(()=>{pinBuf="";pDots();},1000);}
+}
+
+async function doSubmit(){
+  showScr("register");const{emp,tk}=pinTarget;const now=new Date();
+  const tin=document.getElementById("t-in").value;const tout=selectedType==="out"?document.getElementById("t-out").value:null;
+  const rec={date:todayS(),day:DAYS[now.getDay()],team:TEAMS[tk].l,emp,type:selectedType,tin:(selectedType==="in"||selectedType==="out")?tin:null,tout,note:document.getElementById("note-area").value||"",recorded_at:nowT()};
+  showToast(`✓ تم تسجيل ${emp}`);
+  if(selectedType==="in")startTimer(emp,tin);if(selectedType==="out")stopTimer();
+  setTimeout(()=>checkOnce(emp),800);
+  document.getElementById("team-sel").value="";document.getElementById("emp-sel").innerHTML="<option value=''>اختر القسم أولاً</option>";
+  document.querySelectorAll(".type-btn").forEach(b=>b.className="type-btn");selectedType=null;pinTarget=null;
+  document.getElementById("time-card").style.display="block";document.getElementById("note-area").value="";
+  const hrs=calcH(rec.tin,rec.tout);
+  await sb.from("attendance").insert({employee_name:rec.emp,team:rec.team,date:rec.date,day:rec.day,type:rec.type,time_in:rec.tin||null,time_out:rec.tout||null,hours:parseFloat(hrs.toFixed(2)),status:TL[rec.type],note:rec.note||null,recorded_at:rec.recorded_at});
+  await loadTodayRecs();checkReminder();
+  fetch(SHEETS_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({date:rec.date,day:rec.day,team:rec.team,emp:rec.emp,tin:rec.tin||"—",tout:rec.tout||"—",status:TL[rec.type],recorded_at:rec.recorded_at})}).catch(()=>{});
+}
+
+function startTimer(emp,tin){
+  const[h,m]=tin.split(":").map(Number);const now=new Date();ciTime=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0);
+  setEl("timer-emp",emp);document.getElementById("timer-card").classList.add("show");
+  if(timerInt)clearInterval(timerInt);
+  timerInt=setInterval(()=>{const diff=Math.max(0,Math.floor((Date.now()-ciTime.getTime())/1000));setEl("timer-disp",`${pad(Math.floor(diff/3600))}:${pad(Math.floor((diff%3600)/60))}:${pad(diff%60)}`);},1000);
+  localStorage.setItem("active_ci",JSON.stringify({emp,tin,date:todayS()}));
+}
+function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}ciTime=null;document.getElementById("timer-card").classList.remove("show");localStorage.removeItem("active_ci");}
+function restoreTimer(){const s=localStorage.getItem("active_ci");if(!s)return;const{emp,tin,date}=JSON.parse(s);if(date!==todayS()){localStorage.removeItem("active_ci");return;}startTimer(emp,tin);}
+async function quickOut(){
+  const s=localStorage.getItem("active_ci");if(!s)return;const{emp,tin}=JSON.parse(s);const tout=nowT();
+  let empTeam="تيم سوريا";Object.keys(TEAMS).forEach(tk=>{if(TEAMS[tk].members.includes(emp))empTeam=TEAMS[tk].l;});
+  stopTimer();showToast(`✓ خروج ${emp}`);
+  const rec={date:todayS(),day:DAYS[new Date().getDay()],team:empTeam,emp,type:"out",tin,tout,note:"",recorded_at:tout};
+  const hrs=calcH(tin,tout);
+  await sb.from("attendance").insert({employee_name:emp,team:empTeam,date:rec.date,day:rec.day,type:"out",time_in:tin,time_out:tout,hours:parseFloat(hrs.toFixed(2)),status:TL.out,note:null,recorded_at:tout});
+  await loadTodayRecs();
+}
+
+function renderLog(){
+  const list=document.getElementById("log-list");const empty=document.getElementById("log-empty");const btn=document.getElementById("copy-btn");
+  if(!todayRecs.length){empty.style.display="block";list.innerHTML="";if(btn)btn.style.display="none";return}
+  empty.style.display="none";if(btn)btn.style.display="block";
+  list.innerHTML=[...todayRecs].reverse().map((r,i)=>{
+    const hrs=calcH(r.time_in,r.time_out);const hb=hrs>0?`<span class="hc ${hrs<5?"warn":""}">${hrs.toFixed(1)}h</span>`:"";
+    const tk=Object.keys(TL).find(k=>TL[k]===r.status)||"in";const t=r.time_in?(r.time_out?`${r.time_in}→${r.time_out}`:`دخول: ${r.time_in}`):"—";
+    return`<div class="log-entry"><div class="log-av" style="background:${COLORS[i%COLORS.length]}">${initials(r.employee_name)}</div>
+    <div class="log-info"><div class="log-name">${r.employee_name}</div><div class="log-meta">${r.team} · ${t} ${hb}${r.note?` · <i>${r.note}</i>`:""}</div></div>
+    <span class="badge ${TB[tk]||"b-in"}">${r.status}</span></div>`;
+  }).join("");
+}
+function copyLog(){
+  const hdr="التاريخ\tاليوم\tالقسم\tالموظف\tدخول\tخروج\tالحالة\tملاحظة\n";
+  const rows=todayRecs.map(r=>[r.date,r.day,r.team,r.employee_name,r.time_in||"",r.time_out||"",r.status,r.note||""].join("\t")).join("\n");
+  navigator.clipboard.writeText(hdr+rows).then(()=>showToast("✅ تم النسخ"));
+}
+
+async function renderCal(){
+  const grid=document.getElementById("cal-grid");const lbl=document.getElementById("cal-label");if(!grid)return;
+  lbl.textContent=MONTHS_AR[calM]+" "+calY;
+  const mStr=`${calY}/${pad(calM+1)}`;
+  const{data}=await sb.from("attendance").select("date,status,time_in,time_out").like("date",mStr+"%");
+  const map={};(data||[]).forEach(r=>{const d=parseInt(r.date.split("/")[2]);if(!map[d])map[d]=[];map[d].push(r);});
+  const dn=["ح","ن","ث","ر","خ","ج","س"];const first=new Date(calY,calM,1).getDay();const dim=new Date(calY,calM+1,0).getDate();const today=new Date();
+  let html=dn.map(d=>`<div class="cal-hdr">${d}</div>`).join("");
+  for(let i=0;i<first;i++)html+="<div class='cal-day empty'></div>";
+  let tp=0,ta=0,tv=0,tm=0;
+  for(let d=1;d<=dim;d++){
+    const recs=map[d]||[];const isT=d===today.getDate()&&calM===today.getMonth()&&calY===today.getFullYear();
+    let cls="cal-day"+(isT?" today":"");
+    if(recs.some(r=>r.status===TL.in)){cls+=" present";tp++;}else if(recs.some(r=>r.status===TL.abs)){cls+=" absent";ta++;}else if(recs.some(r=>r.status===TL.vac)){cls+=" vacation";tv++;}
+    recs.forEach(r=>tm+=calcH(r.time_in,r.time_out));
+    html+=`<div class="${cls}"><span>${d}</span></div>`;
+  }
+  grid.innerHTML=html;setEl("cal-p",tp);setEl("cal-a",ta);setEl("cal-v",tv);setEl("cal-h",tm.toFixed(1)+"h");
+}
+function calPrev(){calM--;if(calM<0){calM=11;calY--;}renderCal();}function calNext(){calM++;if(calM>11){calM=0;calY++;}renderCal();}
+
+function renderNextHol(){
+  const now=new Date();let cl=null,min=Infinity;
+  FIXED_HOL.forEach(h=>{let d=new Date(now.getFullYear(),h.m-1,h.d);if(d<now)d=new Date(now.getFullYear()+1,h.m-1,h.d);const diff=Math.ceil((d-now)/(1000*60*60*24));if(diff<min){min=diff;cl={...h,date:d,diff};}});
+  if(!cl)return;setEl("next-hol-name",cl.name);setEl("next-hol-date",`${cl.date.getDate()} ${MONTHS_AR[cl.date.getMonth()]} ${cl.date.getFullYear()}`);setEl("next-hol-days",cl.diff===0?"اليوم! 🎉":`${cl.diff} يوم`);
+}
+
+async function loadAnnouncement(){
+  const{data}=await sb.from("announcements").select("*").eq("is_active",true).order("created_at",{ascending:false}).limit(1);
+  if(data&&data.length){setEl("ann-text","📢  "+data[0].message);document.getElementById("ann-bar").classList.add("show");}
+}
+function closeAnn(){document.getElementById("ann-bar").classList.remove("show");}
+async function doPublishAnn(inpId){
+  const txt=document.getElementById(inpId)?.value?.trim();if(!txt)return;
+  await sb.from("announcements").update({is_active:false}).eq("is_active",true);
+  await sb.from("announcements").insert({message:txt,is_active:true});
+  document.getElementById(inpId).value="";setEl("ann-text","📢  "+txt);document.getElementById("ann-bar").classList.add("show");showToast("✅ تم نشر الإعلان");
+}
+async function doClearAnn(){await sb.from("announcements").update({is_active:false}).eq("is_active",true);document.getElementById("ann-bar").classList.remove("show");showToast("تم مسح الإعلان");}
+
+async function loadUrgentMsg(){
+  const{data}=await sb.from("messages").select("*").eq("type","urgent").eq("is_read",false).order("created_at",{ascending:false}).limit(1);
+  if(data&&data.length){window._urgId=data[0].id;setEl("urgent-text",data[0].message);document.getElementById("urgent-bar").classList.add("show");}
+}
+async function closeUrgent(){document.getElementById("urgent-bar").classList.remove("show");if(window._urgId)await sb.from("messages").update({is_read:true}).eq("id",window._urgId);}
+
+function checkReminder(){
+  const r=document.getElementById("reminder");if(!r)return;const h=new Date().getHours();
+  const hasIn=todayRecs.some(rec=>rec.status===TL.in);const hasOut=todayRecs.some(rec=>rec.status===TL.out);
+  if(!hasIn&&h>=8&&h<=20){r.textContent="⏰ لم تسجل دخولك اليوم!";r.classList.add("show");}
+  else if(hasIn&&!hasOut&&h>=15){r.textContent="⏰ لم تسجل خروجك بعد!";r.classList.add("show");}
+  else r.classList.remove("show");
+}
+
+function filterLrTeam(key){const sel=document.getElementById("lr-emp");sel.innerHTML="<option value=''>اسمك</option>";if(!key||!TEAMS[key])return;TEAMS[key].members.forEach(name=>{const o=document.createElement("option");o.value=name;o.textContent=name;sel.appendChild(o);});}
+async function submitLeave(){
+  const emp=document.getElementById("lr-emp").value;const start=document.getElementById("lr-start").value;const end=document.getElementById("lr-end").value;
+  const reason=document.getElementById("lr-reason").value;const msg=document.getElementById("lr-msg");
+  if(!emp||!start||!end){msg.style.color="var(--rtxt)";msg.textContent="⚠️ أكمل البيانات";return}
+  const days=Math.ceil((new Date(end)-new Date(start))/(1000*60*60*24))+1;
+  let empTeam="";Object.keys(TEAMS).forEach(tk=>{if(TEAMS[tk].members.includes(emp))empTeam=TEAMS[tk].l;});
+  msg.style.color="var(--muted)";msg.textContent="جاري الإرسال...";
+  const{error}=await sb.from("leave_requests").insert({employee_name:emp,team:empTeam,start_date:start,end_date:end,days,reason,status:"pending"});
+  if(error){msg.style.color="var(--rtxt)";msg.textContent="❌ خطأ";}
+  else{msg.style.color="var(--gtxt)";msg.textContent="✅ تم إرسال الطلب!";setTimeout(()=>msg.textContent="",3000);loadMyLeaves();}
+}
+async function loadMyLeaves(){
+  const el=document.getElementById("my-leaves");if(!el)return;
+  const emp=document.getElementById("lr-emp").value;
+  if(!emp){el.innerHTML="<div class='loading'>اختر اسمك لرؤية طلباتك</div>";return}
+  const{data}=await sb.from("leave_requests").select("*").eq("employee_name",emp).order("created_at",{ascending:false}).limit(5);
+  if(!data||!data.length){el.innerHTML="<div class='empty'><div class='ei'>📭</div><p>لا يوجد طلبات</p></div>";return}
+  const sm={"pending":"🟡 قيد المراجعة","approved":"✅ موافق","rejected":"❌ مرفوض"};const bm={"pending":"b-pend","approved":"b-appr","rejected":"b-rej"};
+  el.innerHTML=data.map(r=>`<div class="req-item"><div class="req-info"><div class="req-name">${r.start_date} → ${r.end_date} (${r.days} يوم)</div><div class="req-meta">${r.reason||"—"}${r.admin_note?` · <i>${r.admin_note}</i>`:""}</div></div><span class="badge ${bm[r.status]||"b-pend"}">${sm[r.status]||r.status}</span></div>`).join("");
+}
+
+function filterPfTeam(key){const sel=document.getElementById("pf-emp");sel.innerHTML="<option value=''>اسمك</option>";if(!key||!TEAMS[key])return;TEAMS[key].members.forEach(name=>{const o=document.createElement("option");o.value=name;o.textContent=name;sel.appendChild(o);});}
+async function loadMyProf(empName){
+  const content=document.getElementById("pf-content");if(!empName){content.style.display="none";return}
+  content.style.display="block";const av=document.getElementById("pf-av");av.textContent=initials(empName);
+  setEl("pf-name",empName);let empTeam="";Object.keys(TEAMS).forEach(tk=>{if(TEAMS[tk].members.includes(empName))empTeam=TEAMS[tk].l;});setEl("pf-team-disp",empTeam);
+  const{data}=await sb.from("profiles").select("*").eq("employee_name",empName).limit(1);const prof=data&&data.length?data[0]:{};
+  const el=id=>document.getElementById(id);
+  if(el("pf-email"))el("pf-email").value=prof.email||"";if(el("pf-address"))el("pf-address").value=prof.address||"";if(el("pf-shift"))el("pf-shift").value=prof.shift||"";
+  if(el("pf-start"))el("pf-start").value=prof.work_hours_start||"";if(el("pf-end"))el("pf-end").value=prof.work_hours_end||"";
+  setEl("pf-join",prof.join_date||"—");setEl("pf-leaves",(prof.pre_approved_leaves||0)+" يوم");setEl("pf-offdays",prof.off_days||"—");setEl("pf-notes",prof.admin_notes||"—");
+  const{data:perf}=await sb.from("performance").select("*").eq("employee_name",empName).eq("month",currMonth()).limit(1);
+  if(perf&&perf.length)setEl("pf-rating","تقييم هذا الشهر: "+"⭐".repeat(perf[0].rating));
+  loadPfMsgs(empName);
+}
+async function savePfPersonal(){
+  const empName=document.getElementById("pf-emp").value;if(!empName)return;
+  const msg=document.getElementById("pf-msg");msg.style.color="var(--muted)";msg.textContent="جاري الحفظ...";
+  const el=id=>document.getElementById(id);
+  const payload={employee_name:empName,email:el("pf-email").value,address:el("pf-address").value,shift:el("pf-shift").value,work_hours_start:el("pf-start").value,work_hours_end:el("pf-end").value,updated_at:new Date().toISOString()};
+  const{data:ex}=await sb.from("profiles").select("id").eq("employee_name",empName).limit(1);
+  let error;if(ex&&ex.length)({error}=await sb.from("profiles").update(payload).eq("employee_name",empName));else({error}=await sb.from("profiles").insert(payload));
+  if(error){msg.style.color="var(--rtxt)";msg.textContent="❌ خطأ";}else{msg.style.color="var(--gtxt)";msg.textContent="✅ تم!";setTimeout(()=>msg.textContent="",3000);}
+}
+async function loadPfMsgs(empName){
+  const el=document.getElementById("pf-msgs");if(!el)return;
+  const{data}=await sb.from("messages").select("*").eq("employee_name",empName).order("created_at",{ascending:false}).limit(15);
+  const msgs=data||[];const unread=msgs.filter(m=>!m.is_read).length;
+  const dot=document.getElementById("unread-dot");if(dot)dot.style.display=unread>0?"inline-block":"none";
+  if(!msgs.length){el.innerHTML="<div class='empty'><div class='ei'>📭</div><p>لا يوجد رسائل</p></div>";return}
+  el.innerHTML=msgs.map(m=>{const d=new Date(m.created_at);const ds=`${d.getDate()}/${d.getMonth()+1} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return`<div class="msg-item ${m.is_read?"":"unread"}"><div class="msg-hdr"><span class="msg-type ${m.type==="urgent"?"m-urgent":"m-personal"}">${m.type==="urgent"?"🚨 عاجلة":"💬 شخصية"}</span><span class="msg-date">${ds}</span></div><div class="msg-text">${m.message}</div></div>`;
+  }).join("");
+  if(unread>0)await sb.from("messages").update({is_read:true}).eq("employee_name",empName).eq("is_read",false);
+}
+
+async function initMgr(){
+  initTheme();const n=new Date();setEl("mgr-date",`${DAYS[n.getDay()]}، ${n.getDate()}/${n.getMonth()+1}/${n.getFullYear()}`);
+  showScr("manager");await renderMgrDash();setInterval(renderMgrDash,3*60*1000);
+}
+async function renderMgrDash(){
+  const{data}=await sb.from("attendance").select("*").eq("date",todayS()).order("created_at",{ascending:false});
+  const recs=data||[];let filtered=recs;
+  if(mgrTF!=="all")filtered=filtered.filter(r=>r.team===mgrTF);if(mgrSF!=="all")filtered=filtered.filter(r=>r.status===mgrSF);
+  const p=filtered.filter(r=>r.status===TL.in).length;const a=filtered.filter(r=>r.status===TL.abs).length;const v=filtered.filter(r=>r.status===TL.vac).length;const h=filtered.reduce((s,r)=>s+calcH(r.time_in,r.time_out),0);
+  setEl("mgr-p",p);setEl("mgr-a",a);setEl("mgr-v",v);setEl("mgr-h",h.toFixed(1)+"h");
+  const el=document.getElementById("mgr-log");
+  if(!filtered.length){el.innerHTML="<div class='empty'><div class='ei'>📭</div><p>لا يوجد تسجيلات</p></div>";}
+  else el.innerHTML=filtered.map((r,i)=>{const hrs=calcH(r.time_in,r.time_out);const hb=hrs>0?`<span class="hc ${hrs<5?"warn":""}">${hrs.toFixed(1)}h</span>`:"";const tk=Object.keys(TL).find(k=>TL[k]===r.status)||"in";
+    return`<div class="log-entry"><div class="log-av" style="background:${COLORS[i%COLORS.length]}">${initials(r.employee_name)}</div><div class="log-info"><div class="log-name">${r.employee_name}</div><div class="log-meta">${r.team} · ${r.time_in||""} ${r.time_out?"→ "+r.time_out:""} ${hb}</div></div><span class="badge ${TB[tk]||"b-in"}">${r.status}</span></div>`;
+  }).join("");
+  const{data:leaves}=await sb.from("leave_requests").select("*").eq("status","pending").order("created_at",{ascending:false});
+  const lel=document.getElementById("mgr-leaves");
+  if(!leaves||!leaves.length){if(lel)lel.innerHTML="<div class='empty'><div class='ei'>📭</div><p>لا يوجد طلبات</p></div>";}
+  else if(lel)lel.innerHTML=leaves.map(r=>`<div class="req-item"><div class="req-info"><div class="req-name">${r.employee_name}</div><div class="req-meta">${r.start_date}→${r.end_date} (${r.days}يوم) · ${r.reason||"—"}</div></div><div class="req-actions"><button class="req-appr" onclick="approveLeave('${r.id}','approved')">✅</button><button class="req-rej" onclick="approveLeave('${r.id}','rejected')">❌</button></div></div>`).join("");
+}
+function mgrTFilter(val,btn){mgrTF=val;document.querySelectorAll("#mgr-team-tabs .ftab").forEach(b=>b.classList.remove("active"));if(btn)btn.classList.add("active");renderMgrDash();}
+function mgrSFilter(val,btn){mgrSF=val;document.querySelectorAll("#mgr-status-tabs .ftab").forEach(b=>b.classList.remove("active"));if(btn)btn.classList.add("active");renderMgrDash();}
+async function approveLeave(id,status){await sb.from("leave_requests").update({status}).eq("id",id);showToast(status==="approved"?"✅ موافق":"❌ مرفوض");renderMgrDash();renderAdmDash();}
+
+async function initAdm(){
+  initTheme();const n=new Date();const ds=`${DAYS[n.getDay()]}، ${n.getDate()}/${n.getMonth()+1}/${n.getFullYear()}`;
+  ["adm-date","adme-date","pay-date","rep-date","set-date"].forEach(id=>setEl(id,ds));
+  showScr("admin");fillEmpSelects();await renderAdmDash();initMonthSels();setInterval(renderAdmDash,3*60*1000);
+}
+function goAdm(name,btn){
+  const scrId=name==="admin"?"admin":"adm-"+name.replace("adm-","");showScr(scrId);
+  document.querySelectorAll("#screen-"+scrId+" .nav-btn").forEach(b=>b.classList.remove("active"));if(btn)btn.classList.add("active");
+  if(name==="admin")renderAdmDash();if(name==="adm-emp")loadAdmLeaves();if(name==="adm-pay")loadPayroll();if(name==="adm-rep")loadReport();if(name==="adm-set"){fillSalSel();}
+}
+async function renderAdmDash(){
+  const{data}=await sb.from("attendance").select("*").eq("date",todayS()).order("created_at",{ascending:false});
+  const recs=data||[];let filtered=recs;
+  if(admTF!=="all")filtered=filtered.filter(r=>r.team===admTF);if(admSF!=="all")filtered=filtered.filter(r=>r.status===admSF);
+  const search=document.getElementById("adm-search")?.value?.toLowerCase()||"";if(search)filtered=filtered.filter(r=>r.employee_name.toLowerCase().includes(search));
+  const p=filtered.filter(r=>r.status===TL.in).length;const a=filtered.filter(r=>r.status===TL.abs).length;const v=filtered.filter(r=>r.status===TL.vac).length;const h=filtered.reduce((s,r)=>s+calcH(r.time_in,r.time_out),0);
+  setEl("adm-p",p);setEl("adm-a",a);setEl("adm-v",v);setEl("adm-h",h.toFixed(1)+"h");
+  const chart=document.getElementById("adm-chart");
+  if(chart){const tms=["تيم سوريا","تيم Lowes تركيا","تيم السوشال ميديا"];const tc=["#0d7377","#f59e0b","#8b5cf6"];
+    chart.innerHTML=tms.map((t,i)=>{const tr=recs.filter(r=>r.team===t);const tp=tr.filter(r=>r.status===TL.in).length;const tot=allEmps.filter(e=>e.team===t).length||1;const pct=Math.round(tp/tot*100);
+      return`<div class="chart-bar-wrap"><div class="chart-bar-label"><span>${t.replace("تيم ","")}</span><span style="font-weight:700">${tp}/${tot} (${pct}%)</span></div><div class="chart-bar-bg"><div class="chart-bar-fill" style="width:${pct}%;background:${tc[i]}"></div></div></div>`;}).join("");}
+  const el=document.getElementById("adm-log");if(!el)return;
+  if(!filtered.length){el.innerHTML="<div class='empty'><div class='ei'>📭</div><p>لا يوجد تسجيلات</p></div>";return}
+  el.innerHTML=filtered.map((r,i)=>{const hrs=calcH(r.time_in,r.time_out);const hb=hrs>0?`<span class="hc ${hrs<5?"warn":""}">${hrs.toFixed(1)}h</span>`:"";const tk=Object.keys(TL).find(k=>TL[k]===r.status)||"in";
+    return`<div class="log-entry"><div class="log-av" style="background:${COLORS[i%COLORS.length]}">${initials(r.employee_name)}</div><div class="log-info"><div class="log-name">${r.employee_name}</div><div class="log-meta">${r.team} · ${r.time_in||""} ${r.time_out?"→ "+r.time_out:""} ${hb}${r.note?` · <i>${r.note}</i>`:""}</div></div><span class="badge ${TB[tk]||"b-in"}">${r.status}</span></div>`;
+  }).join("");
+}
+function admTFilter(val,btn){admTF=val;document.querySelectorAll("#adm-team-tabs .ftab").forEach(b=>b.classList.remove("active"));if(btn)btn.classList.add("active");renderAdmDash();}
+function admSFilter(val,btn){admSF=val;document.querySelectorAll("#adm-status-tabs .ftab").forEach(b=>b.classList.remove("active"));if(btn)btn.classList.add("active");renderAdmDash();}
+
+async function sendMsg(){
+  const emp=document.getElementById("msg-emp").value;const type=document.getElementById("msg-type").value;const text=document.getElementById("msg-text").value.trim();const st=document.getElementById("msg-st");
+  if(!emp||!text){st.style.color="var(--rtxt)";st.textContent="أكمل البيانات";return}
+  st.style.color="var(--muted)";st.textContent="جاري الإرسال...";
+  const{error}=await sb.from("messages").insert({employee_name:emp,message:text,type,is_read:false});
+  if(error){st.style.color="var(--rtxt)";st.textContent="❌ خطأ";}else{st.style.color="var(--gtxt)";st.textContent=`✅ تم الإرسال لـ ${emp}`;document.getElementById("msg-text").value="";setTimeout(()=>st.textContent="",3000);}
+}
+function fillTpl(txt){const el=document.getElementById("msg-text");if(el)el.value=txt;}
+
+async function viewProf(empName){
+  const c=document.getElementById("view-prof-c");if(!empName){c.style.display="none";return}
+  c.style.display="block";currentPerfEmp=empName;
+  setEl("perf-month-lbl",currMonth());
+  const{data}=await sb.from("profiles").select("*").eq("employee_name",empName).limit(1);const prof=data&&data.length?data[0]:{};
+  const info=document.getElementById("view-prof-info");
+  const rows=[["الإيميل",prof.email||"—"],["العنوان",prof.address||"—"],["الواردية",prof.shift||"—"],["الدوام",prof.work_hours_start&&prof.work_hours_end?`${prof.work_hours_start}—${prof.work_hours_end}`:"—"],["الانضمام",prof.join_date||"—"],["الإجازات",(prof.pre_approved_leaves||0)+" يوم"],["العطل",prof.off_days||"—"],["ملاحظات",prof.admin_notes||"—"]];
+  info.innerHTML=rows.map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">${k}</span><span style="font-weight:500">${v}</span></div>`).join("");
+  const{data:perf}=await sb.from("performance").select("*").eq("employee_name",empName).eq("month",currMonth()).limit(1);
+  currentRating=perf&&perf.length?perf[0].rating:0;updateStars();
+  const pn=document.getElementById("perf-notes");if(pn&&perf&&perf.length)pn.value=perf[0].notes||"";
+}
+function setRating(n){currentRating=n;updateStars();}
+function updateStars(){document.querySelectorAll(".star").forEach((s,i)=>s.classList.toggle("active",i<currentRating));}
+async function savePerf(){
+  if(!currentPerfEmp)return;const notes=document.getElementById("perf-notes").value;const msg=document.getElementById("perf-msg");
+  msg.style.color="var(--muted)";msg.textContent="جاري الحفظ...";const month=currMonth();
+  const payload={employee_name:currentPerfEmp,month,rating:currentRating,notes};
+  const{data:ex}=await sb.from("performance").select("id").eq("employee_name",currentPerfEmp).eq("month",month).limit(1);
+  let error;if(ex&&ex.length)({error}=await sb.from("performance").update(payload).eq("employee_name",currentPerfEmp).eq("month",month));else({error}=await sb.from("performance").insert(payload));
+  if(error){msg.style.color="var(--rtxt)";msg.textContent="❌ خطأ";}else{msg.style.color="var(--gtxt)";msg.textContent="✅ تم حفظ التقييم!";setTimeout(()=>msg.textContent="",3000);}
+}
+async function loadEditP(empName){
+  const f=document.getElementById("edit-prof-f");if(!empName){f.style.display="none";return}f.style.display="block";
+  const{data}=await sb.from("profiles").select("*").eq("employee_name",empName).limit(1);const prof=data&&data.length?data[0]:{};
+  const el=id=>document.getElementById(id);
+  if(el("ep-join"))el("ep-join").value=prof.join_date||"";if(el("ep-leaves"))el("ep-leaves").value=prof.pre_approved_leaves||"";if(el("ep-offdays"))el("ep-offdays").value=prof.off_days||"";if(el("ep-notes"))el("ep-notes").value=prof.admin_notes||"";
+}
+async function saveEditP(){
+  const empName=document.getElementById("edit-emp").value;if(!empName)return;const msg=document.getElementById("ep-msg");msg.style.color="var(--muted)";msg.textContent="جاري الحفظ...";
+  const el=id=>document.getElementById(id);
+  const payload={employee_name:empName,join_date:el("ep-join").value,pre_approved_leaves:parseInt(el("ep-leaves").value)||0,off_days:el("ep-offdays").value,admin_notes:el("ep-notes").value,updated_at:new Date().toISOString()};
+  const{data:ex}=await sb.from("profiles").select("id").eq("employee_name",empName).limit(1);let error;
+  if(ex&&ex.length)({error}=await sb.from("profiles").update(payload).eq("employee_name",empName));else({error}=await sb.from("profiles").insert(payload));
+  if(error){msg.style.color="var(--rtxt)";msg.textContent="❌ خطأ";}else{msg.style.color="var(--gtxt)";msg.textContent="✅ تم!";setTimeout(()=>msg.textContent="",3000);}
+}
+async function updatePIN(){
+  const emp=document.getElementById("pin-emp").value;const pin=String(document.getElementById("new-pin").value);const msg=document.getElementById("pin-msg");
+  if(!emp||!/^\d{4}$/.test(pin)){msg.style.color="var(--rtxt)";msg.textContent="⚠️ اختر موظف وأدخل 4 أرقام";return}
+  const{error}=await sb.from("employees").update({pin}).eq("name",emp);
+  if(error){msg.style.color="var(--rtxt)";msg.textContent="❌ خطأ";}else{empPins[emp]=pin;msg.style.color="var(--gtxt)";msg.textContent=`✅ تم تحديث PIN لـ ${emp}`;document.getElementById("new-pin").value="";setTimeout(()=>msg.textContent="",3000);}
+}
+async function loadAdmLeaves(){
+  const el=document.getElementById("adm-leaves");if(!el)return;
+  const{data}=await sb.from("leave_requests").select("*").eq("status","pending").order("created_at",{ascending:false});
+  if(!data||!data.length){el.innerHTML="<div class='empty'><div class='ei'>📭</div><p>لا يوجد طلبات</p></div>";return}
+  el.innerHTML=data.map(r=>`<div class="req-item"><div class="req-info"><div class="req-name">${r.employee_name} · ${r.team}</div><div class="req-meta">${r.start_date}→${r.end_date} (${r.days}يوم) · ${r.reason||"—"}</div></div><div class="req-actions"><button class="req-appr" onclick="approveLeave('${r.id}','approved')">✅ موافق</button><button class="req-rej" onclick="approveLeave('${r.id}','rejected')">❌ رفض</button></div></div>`).join("");
+}
+
+function initMonthSels(){
+  ["pay-month","rep-month"].forEach(id=>{const sel=document.getElementById(id);if(!sel)return;sel.innerHTML="";for(let i=0;i<12;i++){const d=new Date();d.setMonth(d.getMonth()-i);const m=`${d.getFullYear()}/${pad(d.getMonth()+1)}`;sel.innerHTML+=`<option value="${m}">${m}</option>`;}});
+}
+
+async function loadPayroll(){
+  const month=document.getElementById("pay-month")?.value||currMonth();const el=document.getElementById("pay-content");if(!el)return;
+  el.innerHTML="<div class='loading'>جاري التحميل...</div>";
+  const{data:payrolls}=await sb.from("monthly_payroll").select("*").eq("month",month);
+  const payMap={};(payrolls||[]).forEach(p=>payMap[p.employee_name]=p);
+  let filtered=allEmps;if(payTF!=="all")filtered=filtered.filter(e=>e.team===payTF);
+  window._payMonth=month;window._payMap=payMap;
+  el.innerHTML=filtered.map(emp=>{
+    const p=payMap[emp.name]||{};const bonuses=p.custom_bonuses||[];
+    return`<div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div><div style="font-size:15px;font-weight:700">${emp.name}</div><div style="font-size:12px;color:var(--muted)">${emp.team}</div></div>
+        <div style="text-align:left"><div style="font-size:12px;color:var(--muted)">الإجمالي</div><div style="font-size:17px;font-weight:700;color:var(--gtxt)" id="tot_${emp.name}">${Number(p.total_salary||0).toLocaleString()} ل.س</div></div>
+      </div>
+      <div class="row2" style="margin-bottom:8px">
+        <div class="f-group"><label>الراتب الأساسي</label><input type="number" id="base_${emp.name}" value="${p.base_salary||""}" placeholder="0" oninput="calcT('${emp.name}')"></div>
+        <div class="f-group"><label>المبيعات الفعلية</label><input type="number" id="sales_${emp.name}" value="${p.actual_sales||""}" placeholder="0" oninput="calcT('${emp.name}')"></div>
+      </div>
+      <div class="row2" style="margin-bottom:8px">
+        <div class="f-group"><label>ساعات إضافية</label><input type="number" id="oth_${emp.name}" value="${p.overtime_hours||""}" placeholder="ساعات" oninput="calcT('${emp.name}')"></div>
+        <div class="f-group"><label>قيمة/ساعة</label><input type="number" id="ota_${emp.name}" value="${p.overtime_rate||""}" placeholder="0" oninput="calcT('${emp.name}')"></div>
+      </div>
+      <div class="row2" style="margin-bottom:8px">
+        <div class="f-group"><label>عمولة مبيعات</label>
+          <div class="comm-row"><div class="sel-wrap"><select id="sct_${emp.name}" onchange="calcT('${emp.name}')"><option value="percentage">%</option><option value="fixed">ثابت</option></select></div><input type="number" id="scv_${emp.name}" value="${p.sales_commission_value||""}" placeholder="0" oninput="calcT('${emp.name}')"></div>
+        </div>
+        <div class="f-group"><label>التارگت الشهري</label><input type="number" id="tgt_${emp.name}" value="${p.monthly_target||""}" placeholder="0" oninput="calcT('${emp.name}')"></div>
+      </div>
+      <div class="row2" style="margin-bottom:8px">
+        <div class="f-group"><label>عمولة التارگت</label>
+          <div class="comm-row"><div class="sel-wrap"><select id="tct_${emp.name}" onchange="calcT('${emp.name}')"><option value="percentage">%</option><option value="fixed">ثابت</option></select></div><input type="number" id="tcv_${emp.name}" value="${p.target_commission_value||""}" placeholder="0" oninput="calcT('${emp.name}')"></div>
+        </div>
+        <div class="f-group"><label>البدلات (نت+طعام)</label><input type="number" id="alw_${emp.name}" value="${(p.internet_allowance||0)+(p.food_allowance||0)||""}" placeholder="0" oninput="calcT('${emp.name}')"></div>
+      </div>
+      <div class="row2" style="margin-bottom:8px">
+        <div class="f-group"><label>خصومات</label><input type="number" id="ded_${emp.name}" value="${p.deductions||""}" placeholder="0" oninput="calcT('${emp.name}')"></div>
+        <div class="f-group"><label>ملاحظات</label><input type="text" id="nts_${emp.name}" value="${p.notes||""}" placeholder="..."></div>
+      </div>
+      <div id="bon_${emp.name}">${bonuses.map((b)=>`<div class="bonus-item"><input type="text" value="${b.name||""}" placeholder="اسم الإضافة" oninput="calcT('${emp.name}')"><input type="number" value="${b.amount||""}" placeholder="المبلغ" oninput="calcT('${emp.name}')"><button class="bonus-remove" onclick="this.parentElement.remove();calcT('${emp.name}')">✕</button></div>`).join("")}</div>
+      <button class="btn btn-muted btn-sm" onclick="addBon('${emp.name}')" style="margin-bottom:10px">+ إضافة مخصصة</button>
+      <div class="payroll-total-box"><span style="font-weight:700;color:var(--gtxt)">الإجمالي</span><span style="font-size:17px;font-weight:700;color:var(--gtxt)" id="tot2_${emp.name}">${Number(p.total_salary||0).toLocaleString()} ل.س</span></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-teal" style="flex:1" onclick="savePay('${emp.name}','${month}')">💾 حفظ</button>
+        <button class="btn btn-sm" style="background:var(--abg);color:var(--atxt);border:1px solid var(--amber)" onclick="printSlip('${emp.name}','${month}')">🖨️ كشف</button>
+      </div>
+      <div class="save-msg" id="pmsg_${emp.name}"></div>
+    </div>`;
+  }).join("");
+  filtered.forEach(e=>calcT(e.name));
+}
+
+function calcT(en){
+  const g=id=>{const e=document.getElementById(id+"_"+en);return parseFloat(e?.value||0)||0};
+  const gs=id=>{const e=document.getElementById(id+"_"+en);return e?.value||"percentage"};
+  const base=g("base"),sales=g("sales"),oth=g("oth"),ota=g("ota"),sct=gs("sct"),scv=g("scv"),tgt=g("tgt"),tct=gs("tct"),tcv=g("tcv"),alw=g("alw"),ded=g("ded");
+  const ot=oth*ota;const sc=sct==="percentage"?sales*(scv/100):scv;const ta=sales>=tgt&&tgt>0;const tc=ta?(tct==="percentage"?sales*(tcv/100):tcv):0;
+  const bon=document.getElementById("bon_"+en);let bt=0;bon?.querySelectorAll(".bonus-item").forEach(item=>{const ins=item.querySelectorAll("input");bt+=parseFloat(ins[1]?.value||0)||0;});
+  const total=Math.max(0,base+ot+sc+tc+alw+bt-ded);const fmt=n=>n.toLocaleString()+" ل.س";setEl("tot_"+en,fmt(total));setEl("tot2_"+en,fmt(total));
+}
+function addBon(en){const c=document.getElementById("bon_"+en);const d=document.createElement("div");d.className="bonus-item";d.innerHTML=`<input type="text" placeholder="اسم الإضافة" oninput="calcT('${en}')"><input type="number" placeholder="المبلغ" oninput="calcT('${en}')"><button class="bonus-remove" onclick="this.parentElement.remove();calcT('${en}')">✕</button>`;c.appendChild(d);}
+async function savePay(en,month){
+  const g=id=>{const e=document.getElementById(id+"_"+en);return parseFloat(e?.value||0)||0};const gs=id=>{const e=document.getElementById(id+"_"+en);return e?.value||"percentage"};
+  const msg=document.getElementById("pmsg_"+en);msg.style.color="var(--muted)";msg.textContent="جاري الحفظ...";
+  const base=g("base"),sales=g("sales"),oth=g("oth"),ota=g("ota"),sct=gs("sct"),scv=g("scv"),tgt=g("tgt"),tct=gs("tct"),tcv=g("tcv"),alw=g("alw"),ded=g("ded");
+  const ot=oth*ota;const sc=sct==="percentage"?sales*(scv/100):scv;const ta=sales>=tgt&&tgt>0;const tc=ta?(tct==="percentage"?sales*(tcv/100):tcv):0;
+  const bon=document.getElementById("bon_"+en);const bonuses=[];bon?.querySelectorAll(".bonus-item").forEach(item=>{const ins=item.querySelectorAll("input");const name=ins[0]?.value?.trim();const amount=parseFloat(ins[1]?.value||0)||0;if(name||amount)bonuses.push({name:name||"إضافة",amount});});
+  const bt=bonuses.reduce((s,b)=>s+b.amount,0);const total=Math.max(0,base+ot+sc+tc+alw+bt-ded);
+  const notes=document.getElementById("nts_"+en)?.value||"";
+  const payload={employee_name:en,month,base_salary:base,overtime_hours:oth,overtime_amount:ot,actual_sales:sales,sales_commission:sc,sales_commission_type:sct,sales_commission_value:scv,monthly_target:tgt,target_achieved:ta,target_commission:tc,target_commission_type:tct,target_commission_value:tcv,custom_bonuses:bonuses,internet_allowance:alw,food_allowance:0,deductions:ded,total_salary:total,notes};
+  const{data:ex}=await sb.from("monthly_payroll").select("id").eq("employee_name",en).eq("month",month).limit(1);let error;
+  if(ex&&ex.length)({error}=await sb.from("monthly_payroll").update(payload).eq("employee_name",en).eq("month",month));else({error}=await sb.from("monthly_payroll").insert(payload));
+  if(error){msg.style.color="var(--rtxt)";msg.textContent="❌ خطأ";}else{msg.style.color="var(--gtxt)";msg.textContent="✅ تم!";if(window._payMap)window._payMap[en]=payload;setTimeout(()=>msg.textContent="",3000);}
+}
+function printSlip(en,month){
+  const p=window._payMap?.[en]||{};const bonuses=p.custom_bonuses||[];
+  const w=window.open("","_blank");
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>كشف راتب ${en}</title><link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet"><style>*{font-family:'Tajawal',sans-serif;box-sizing:border-box}body{padding:30px;color:#1a1a2e;max-width:600px;margin:0 auto}h1{color:#0f1f3d;font-size:20px}table{width:100%;border-collapse:collapse}td{padding:8px 12px;border-bottom:1px solid #eee;font-size:14px}td:last-child{text-align:left}.tot td{font-weight:700;font-size:16px;border-top:2px solid #0f1f3d;color:#0d7377}.ded{color:red}@media print{body{padding:15px}}</style></head><body>
+  <h1>🌹 كشف راتب — ${en}</h1><p style="color:#6b7280;font-size:13px;margin-bottom:20px">${en} · ${month}</p><table>
+  <tr><td>الراتب الأساسي</td><td>+${Number(p.base_salary||0).toLocaleString()}</td></tr>
+  ${p.overtime_amount>0?`<tr><td>إضافي (${p.overtime_hours}h)</td><td style="color:green">+${Number(p.overtime_amount||0).toLocaleString()}</td></tr>`:""}
+  ${p.sales_commission>0?`<tr><td>عمولة مبيعات</td><td style="color:green">+${Number(p.sales_commission||0).toLocaleString()}</td></tr>`:""}
+  ${p.target_commission>0?`<tr><td>عمولة تارگت ✅</td><td style="color:green">+${Number(p.target_commission||0).toLocaleString()}</td></tr>`:""}
+  ${bonuses.map(b=>`<tr><td>${b.name}</td><td style="color:green">+${Number(b.amount||0).toLocaleString()}</td></tr>`).join("")}
+  ${p.internet_allowance>0?`<tr><td>بدلات</td><td style="color:green">+${Number(p.internet_allowance||0).toLocaleString()}</td></tr>`:""}
+  ${p.deductions>0?`<tr><td>خصومات</td><td class="ded">-${Number(p.deductions||0).toLocaleString()}</td></tr>`:""}
+  <tr class="tot"><td>الإجمالي</td><td>${Number(p.total_salary||0).toLocaleString()} ل.س</td></tr></table>
+  ${p.notes?`<p style="margin-top:15px;font-size:13px;color:#6b7280">ملاحظة: ${p.notes}</p>`:""}
+  <p style="margin-top:30px;font-size:11px;color:#aaa;text-align:center">Lowe's Professional</p><script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
+}
+function payTFilter(val,btn){payTF=val;document.querySelectorAll("#pay-team-tabs .ftab").forEach(b=>b.classList.remove("active"));if(btn)btn.classList.add("active");loadPayroll();}
+function exportPayExcel(){
+  const month=document.getElementById("pay-month")?.value||currMonth();
+  const rows=[["الموظف","القسم","الراتب الأساسي","الإضافي","عمولة مبيعات","عمولة تارگت","إضافات مخصصة","البدلات","خصومات","الإجمالي"]];
+  allEmps.forEach(emp=>{const p=window._payMap?.[emp.name]||{};const bt=(p.custom_bonuses||[]).reduce((s,b)=>s+parseFloat(b.amount||0),0);rows.push([emp.name,emp.team,p.base_salary||0,p.overtime_amount||0,p.sales_commission||0,p.target_commission||0,bt,p.internet_allowance||0,p.deductions||0,p.total_salary||0]);});
+  const ws=XLSX.utils.aoa_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"رواتب "+month);XLSX.writeFile(wb,`رواتب_${month.replace("/","_")}.xlsx`);
+}
+
+let repData=[];
+async function loadReport(){
+  const month=document.getElementById("rep-month")?.value||currMonth();const team=document.getElementById("rep-team")?.value||"";
+  let q=sb.from("attendance").select("*").like("date",month+"%");if(team)q=q.eq("team",team);
+  const{data}=await q;const recs=data||[];const empMap={};
+  recs.forEach(r=>{if(!empMap[r.employee_name])empMap[r.employee_name]={name:r.employee_name,team:r.team,present:0,absent:0,vacation:0,hours:0};const e=empMap[r.employee_name];if(r.status===TL.in)e.present++;else if(r.status===TL.abs)e.absent++;else if(r.status===TL.vac)e.vacation++;e.hours+=calcH(r.time_in,r.time_out);});
+  repData=Object.values(empMap);renderReport();
+  setEl("rep-p",repData.reduce((s,e)=>s+e.present,0));setEl("rep-a",repData.reduce((s,e)=>s+e.absent,0));setEl("rep-h",repData.reduce((s,e)=>s+e.hours,0).toFixed(1)+"h");setEl("rep-e",repData.length);
+}
+function renderReport(){
+  const search=document.getElementById("rep-search")?.value?.toLowerCase()||"";let filtered=repData;if(search)filtered=filtered.filter(e=>e.name.toLowerCase().includes(search));
+  const el=document.getElementById("rep-content");if(!el)return;
+  if(!filtered.length){el.innerHTML="<div class='empty'><div class='ei'>📭</div><p>لا يوجد بيانات</p></div>";return}
+  el.innerHTML=`<div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>الموظف</th><th>القسم</th><th>حضور</th><th>غياب</th><th>إجازة</th><th>ساعات</th><th>متوسط</th><th>نسبة</th></tr></thead><tbody>
+  ${filtered.map((e,i)=>{const pct=e.present+e.absent>0?Math.round(e.present/(e.present+e.absent)*100):0;return`<tr><td><div style="width:26px;height:26px;border-radius:50%;background:${COLORS[i%COLORS.length]};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-left:5px;vertical-align:middle">${initials(e.name)}</div>${e.name}</td><td><span class="badge b-vac">${e.team}</span></td><td style="color:var(--green);font-weight:700">${e.present}</td><td style="color:var(--red);font-weight:700">${e.absent}</td><td style="color:var(--blue)">${e.vacation}</td><td style="font-weight:700">${e.hours.toFixed(1)}h</td><td>${e.present>0?(e.hours/e.present).toFixed(1):0}h</td><td><span class="badge ${pct>=90?"b-in":pct>=70?"b-abs":"b-out"}">${pct}%</span></td></tr>`;}).join("")}
+  </tbody></table></div></div>`;
+}
+function exportRepExcel(){
+  const month=document.getElementById("rep-month")?.value||currMonth();
+  const rows=[["الموظف","القسم","حضور","غياب","إجازة","ساعات","متوسط/يوم","نسبة%"]];
+  repData.forEach(e=>{const pct=e.present+e.absent>0?Math.round(e.present/(e.present+e.absent)*100):0;rows.push([e.name,e.team,e.present,e.absent,e.vacation,e.hours.toFixed(1),e.present>0?(e.hours/e.present).toFixed(1):0,pct+"%"]);});
+  const ws=XLSX.utils.aoa_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"تقرير "+month);XLSX.writeFile(wb,`تقرير_${month.replace("/","_")}.xlsx`);
+}
+
+function fillSalSel(){
+  const sel=document.getElementById("sal-emp");if(!sel)return;sel.innerHTML="<option value=''>اختر الموظف</option>";
+  allEmps.forEach(e=>{const o=document.createElement("option");o.value=e.name;o.textContent=e.name;sel.appendChild(o);});
+}
+async function loadSalSet(empName){
+  const f=document.getElementById("sal-fields");if(!empName){f.style.display="none";return}f.style.display="block";
+  const{data}=await sb.from("salaries").select("*").eq("employee_name",empName).limit(1);const s=data&&data.length?data[0]:{};
+  const el=id=>document.getElementById(id);
+  if(el("sl-base"))el("sl-base").value=s.base_salary||"";if(el("sl-net"))el("sl-net").value=s.internet_allowance||"";if(el("sl-food"))el("sl-food").value=s.food_allowance||"";if(el("sl-target"))el("sl-target").value=s.monthly_target||"";
+  if(el("sl-tc-type"))el("sl-tc-type").value=s.target_commission_type||"percentage";if(el("sl-tc-val"))el("sl-tc-val").value=s.target_commission_value||"";
+  if(el("sl-sc-type"))el("sl-sc-type").value=s.sales_commission_type||"percentage";if(el("sl-sc-val"))el("sl-sc-val").value=s.sales_commission_value||"";
+}
+async function saveSalSet(){
+  const empName=document.getElementById("sal-emp").value;if(!empName)return;const msg=document.getElementById("sal-msg");msg.style.color="var(--muted)";msg.textContent="جاري الحفظ...";
+  const g=id=>{const e=document.getElementById(id);return parseFloat(e?.value||0)||0};const gs=id=>{const e=document.getElementById(id);return e?.value||"percentage"};
+  const payload={employee_name:empName,base_salary:g("sl-base"),internet_allowance:g("sl-net"),food_allowance:g("sl-food"),monthly_target:g("sl-target"),target_commission_type:gs("sl-tc-type"),target_commission_value:g("sl-tc-val"),sales_commission_type:gs("sl-sc-type"),sales_commission_value:g("sl-sc-val"),updated_at:new Date().toISOString()};
+  const{data:ex}=await sb.from("salaries").select("id").eq("employee_name",empName).limit(1);let error;
+  if(ex&&ex.length)({error}=await sb.from("salaries").update(payload).eq("employee_name",empName));else({error}=await sb.from("salaries").insert(payload));
+  if(error){msg.style.color="var(--rtxt)";msg.textContent="❌ خطأ";}else{msg.style.color="var(--gtxt)";msg.textContent="✅ تم!";setTimeout(()=>msg.textContent="",3000);}
+}
+
+async function changePass(r2){
+  const curId=r2==="manager"?"cur-mgr-p":"cur-adm-p";const newId=r2==="manager"?"new-mgr-p":"new-adm-p";const msgId=r2==="manager"?"mgr-pass-msg":"adm-pass-msg";const key=r2==="manager"?"manager_pass":"admin_pass";
+  const cur=document.getElementById(curId)?.value;const newP=document.getElementById(newId)?.value;const msg=document.getElementById(msgId);
+  if(cur!==admPasses[r2]){msg.style.color="var(--rtxt)";msg.textContent="❌ كلمة السر الحالية غلط";return}
+  if(!newP||newP.length<6){msg.style.color="var(--rtxt)";msg.textContent="⚠️ لازم 6 أحرف على الأقل";return}
+  msg.style.color="var(--muted)";msg.textContent="جاري الحفظ...";
+  const{error}=await sb.from("system_settings").update({value:newP,updated_at:new Date().toISOString()}).eq("key",key);
+  if(error){msg.style.color="var(--rtxt)";msg.textContent="❌ خطأ";}else{admPasses[r2]=newP;msg.style.color="var(--gtxt)";msg.textContent="✅ تم تغيير كلمة السر!";document.getElementById(curId).value="";document.getElementById(newId).value="";setTimeout(()=>msg.textContent="",3000);}
+}
+
+async function init(){
+  initTheme();await loadEmps();await loadPasses();updateConn();
+}
+init();
+</script>
+</body>
+</html>
