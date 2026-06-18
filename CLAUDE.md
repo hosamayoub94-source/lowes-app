@@ -10,6 +10,21 @@ This repo holds a **single, self‑contained HTML file** with inline CSS and van
 
 This is a **leaner variant** of the larger app maintained in the sibling `LOWES` repo (`index_v4.html`). Both point at the **same** Supabase project, but the two files are independent — changes here do not propagate to `LOWES` and vice versa.
 
+## Product & business context
+
+**Company:** LOWE'S Professional — a Turkey‑based skincare/beauty brand selling in **Syria (primary market 2026), Turkey, and the Gulf**. The app handles three currencies: **SYP, USD, TRY**.
+
+**Where this file sits among the projects (same Supabase backend):**
+- **`lowes-app-web` — the live production staff app** (React 18 + Vite + Supabase on Vercel). The current/canonical product.
+- `LOWES/index_v4.html` — the full‑featured single‑file HTML app.
+- **`lowes-app` (this repo)** — the leanest single‑file variant. Treat as **secondary/prototype** unless told otherwise.
+
+**Roles** (`admin` / `manager` / `employee`, plus `media_buyer` in the larger apps) map to a real org with Syria and Turkey teams; accounts are **disabled, not deleted**, when staff leave.
+
+**Brand vs. app colors:** official brand identity is **gold `#C9A646` + black + cream**; the app UIs use cream/navy/teal. Use the **gold brand identity** for anything customer‑facing (invoices, receipts, exports).
+
+> ⚠️ Business source docs contain secrets (logins, ad‑account IDs, staff PINs). **Never commit those to any repo.**
+
 ## Repository layout
 
 | Path | Purpose |
