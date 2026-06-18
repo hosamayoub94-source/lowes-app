@@ -38,7 +38,9 @@ Role‑gated flows for `employee`, `manager`, and `admin`, reached through a rol
 ### Backend (Supabase)
 - Client is created once: `supabase.createClient(SUPA_URL, SUPA_KEY)` (search for `SUPA_URL`, ~line 682).
 - `SUPA_KEY` is the **anon/public** key and is intentionally shipped in the client. Supabase Row‑Level Security is the real access boundary — never assume the client can be trusted, and never paste a service‑role/secret key into this file.
-- Data access is via `sb.from("<table>")...`. Tables in use: `profiles`, `attendance`, `performance`, `messages`, `leave_requests`, `salaries`, `monthly_payroll`, `announcements`, `system_settings`, `employees`. Grep `\.from("` for the current set.
+- Data access is via `sb.from("<table>")...`. This lean app touches only a handful of tables: `profiles`, `attendance`, `performance`, `messages`, `leave_requests`, `salaries`, `monthly_payroll`, `announcements`, `system_settings`, `employees`. Grep `\.from("` for the current set.
+- The Supabase project itself is a **large shared ERP/CRM backend (~110 tables)** also used by the bigger `LOWES` app — this file only uses a small slice of it. See `LOWES/CLAUDE.md` for the full data‑model map before assuming a table doesn't exist.
+- **`profiles` is the central identity/user table** (holds `pin`, `password`, `role_type`, permissions, etc.), not `employees` (a small legacy table). `system_settings` is a generic `key`/`value` store.
 
 ### External libraries (CDN, no install)
 - `@supabase/supabase-js@2` — backend client.
